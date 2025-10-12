@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: theme('colors.primary.DEFAULT');
+  color: theme('colors.text.primary');
+}
+
+/* Dark theme styling based on reference image */
+.app-container {
+  min-height: 100vh;
+}
+
+.card {
+  background-color: theme('colors.secondary.DEFAULT');
+  border-radius: 0.5rem;
+}
+
+.nav-item {
+  color: theme('colors.text.secondary');
+}
+
+.nav-item:hover {
+  color: theme('colors.accent.DEFAULT');
+}
+
+.btn-primary {
+  background-color: theme('colors.highlight.DEFAULT');
+  color: theme('colors.text.primary');
+}
+
+.btn-primary:hover {
+  background-color: theme('colors.secondary.light');
+}

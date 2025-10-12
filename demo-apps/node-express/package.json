@@ -1,0 +1,12 @@
+{
+  "name": "vulnerable-node-demo",
+  "version": "1.0.0",
+  "description": "Intentionally vulnerable Node.js application for security testing",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

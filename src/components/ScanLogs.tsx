@@ -60,8 +60,9 @@ function ScanLogs({ scanId, visible }: ScanLogsProps) {
             addLog(`${stage}: ${details}`, 'info');
           }
         }
-      } catch (error) {
-        addLog(`Error checking scan status: ${error.message || 'Unknown error'}`, 'error');
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        addLog(`Error checking scan status: ${errorMessage}`, 'error');
       }
     }, 2000);
     

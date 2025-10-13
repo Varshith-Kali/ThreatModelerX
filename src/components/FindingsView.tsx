@@ -45,6 +45,11 @@ function FindingsView({ scanId }: FindingsViewProps) {
   useEffect(() => {
     fetchFindings();
   }, [scanId, filterSeverity]);
+  
+  const downloadReport = () => {
+    if (!scanId) return;
+    window.open(`${API_BASE}/api/report/${scanId}?format=html`, '_blank');
+  };
 
   const fetchFindings = async () => {
     setLoading(true);
@@ -160,6 +165,14 @@ function FindingsView({ scanId }: FindingsViewProps) {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-accent">Security Findings</h1>
         <div className="flex items-center space-x-4">
+          <button
+            onClick={downloadReport}
+            disabled={!scanId}
+            className="px-4 py-2 bg-highlight text-accent rounded-lg hover:bg-primary-light transition-colors flex items-center space-x-2 shadow-md"
+          >
+            <ExternalLink className="h-4 w-4" />
+            <span>Download Report</span>
+          </button>
           <select
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}

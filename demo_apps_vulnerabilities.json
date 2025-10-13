@@ -1,11 +1,90 @@
 {
   "scan_id": "demo-apps-scan",
   "timestamp": "2023-06-01T12:00:00Z",
-  "findings": [],
+  "findings": [
+    {
+      "id": "JAVA-SQL-INJECTION-1",
+      "title": "SQL Injection Vulnerability",
+      "description": "Unsanitized user input used in SQL query",
+      "severity": "high",
+      "file": "C:\\Users\\MSI PC\\Workspace\\DevSecOps Automation Project\\ThreatModelerX\\demo-apps\\java-spring\\src/main/java/com/example/demo/VulnerableApplication.java",
+      "line": 42,
+      "code": "String sql = \"SELECT * FROM users WHERE id = \" + id;",
+      "cwe": "CWE-89",
+      "remediation": "Use parameterized queries with PreparedStatement",
+      "app_name": "Java Spring Demo App",
+      "scan_type": "SAST (Java)"
+    },
+    {
+      "id": "JAVA-CMD-INJECTION-1",
+      "title": "Command Injection Vulnerability",
+      "description": "Unsanitized user input used in command execution",
+      "severity": "high",
+      "file": "C:\\Users\\MSI PC\\Workspace\\DevSecOps Automation Project\\ThreatModelerX\\demo-apps\\java-spring\\src/main/java/com/example/demo/VulnerableApplication.java",
+      "line": 60,
+      "code": "Process process = Runtime.getRuntime().exec(cmd);",
+      "cwe": "CWE-78",
+      "remediation": "Validate and sanitize user input before using in command execution",
+      "app_name": "Java Spring Demo App",
+      "scan_type": "SAST (Java)"
+    },
+    {
+      "id": "JAVA-HARDCODED-CREDS-1",
+      "title": "Hardcoded Credentials",
+      "description": "Hardcoded API key and password in source code",
+      "severity": "medium",
+      "file": "C:\\Users\\MSI PC\\Workspace\\DevSecOps Automation Project\\ThreatModelerX\\demo-apps\\java-spring\\src/main/java/com/example/demo/VulnerableApplication.java",
+      "line": 20,
+      "code": "private static final String API_KEY = \"hardcoded_java_secret_key_12345\";",
+      "cwe": "CWE-798",
+      "remediation": "Store secrets in environment variables or a secure vault",
+      "app_name": "Java Spring Demo App",
+      "scan_type": "SAST (Java)"
+    },
+    {
+      "id": "GO-SQL-INJECTION-1",
+      "title": "SQL Injection Vulnerability",
+      "description": "Unsanitized user input used in SQL query",
+      "severity": "high",
+      "file": "C:\\Users\\MSI PC\\Workspace\\DevSecOps Automation Project\\ThreatModelerX\\demo-apps\\go-gin\\main.go",
+      "line": 45,
+      "code": "query := fmt.Sprintf(\"SELECT * FROM users WHERE id = %s\", id)",
+      "cwe": "CWE-89",
+      "remediation": "Use parameterized queries with prepared statements",
+      "app_name": "Go Gin Demo App",
+      "scan_type": "SAST (Go)"
+    },
+    {
+      "id": "GO-CMD-INJECTION-1",
+      "title": "Command Injection Vulnerability",
+      "description": "Unsanitized user input used in command execution",
+      "severity": "high",
+      "file": "C:\\Users\\MSI PC\\Workspace\\DevSecOps Automation Project\\ThreatModelerX\\demo-apps\\go-gin\\main.go",
+      "line": 82,
+      "code": "command := exec.Command(\"sh\", \"-c\", cmd)",
+      "cwe": "CWE-78",
+      "remediation": "Validate and sanitize user input before using in command execution",
+      "app_name": "Go Gin Demo App",
+      "scan_type": "SAST (Go)"
+    },
+    {
+      "id": "GO-HARDCODED-CREDS-1",
+      "title": "Hardcoded Credentials",
+      "description": "Hardcoded API key and password in source code",
+      "severity": "medium",
+      "file": "C:\\Users\\MSI PC\\Workspace\\DevSecOps Automation Project\\ThreatModelerX\\demo-apps\\go-gin\\main.go",
+      "line": 14,
+      "code": "const API_KEY = \"hardcoded_go_secret_key_12345\"",
+      "cwe": "CWE-798",
+      "remediation": "Store secrets in environment variables or a secure vault",
+      "app_name": "Go Gin Demo App",
+      "scan_type": "SAST (Go)"
+    }
+  ],
   "summary": {
-    "total_vulnerabilities": 0,
-    "high_severity": 0,
-    "medium_severity": 0,
+    "total_vulnerabilities": 6,
+    "high_severity": 4,
+    "medium_severity": 2,
     "low_severity": 0
   }
 }

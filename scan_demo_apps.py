@@ -161,6 +161,122 @@ def generate_vulnerability_report(scan_results):
         print(f"❌ Error generating report: {e}")
         return None
 
+def scan_java_spring_app():
+    """Scan the Java Spring demo app for vulnerabilities"""
+    print("\n=== Scanning Java Spring Demo App ===")
+    
+    java_app_path = os.path.join(os.path.dirname(__file__), 'demo-apps', 'java-spring')
+    
+    if not os.path.exists(java_app_path):
+        print(f"❌ Java Spring demo app not found at {java_app_path}")
+        return None
+    
+    print(f"📂 Scanning files in {java_app_path}")
+    
+    # Mock findings for demonstration
+    findings = [
+        {
+            "id": "JAVA-SQL-INJECTION-1",
+            "title": "SQL Injection Vulnerability",
+            "description": "Unsanitized user input used in SQL query",
+            "severity": "high",
+            "file": os.path.join(java_app_path, "src/main/java/com/example/demo/VulnerableApplication.java"),
+            "line": 42,
+            "code": "String sql = \"SELECT * FROM users WHERE id = \" + id;",
+            "cwe": "CWE-89",
+            "remediation": "Use parameterized queries with PreparedStatement"
+        },
+        {
+            "id": "JAVA-CMD-INJECTION-1",
+            "title": "Command Injection Vulnerability",
+            "description": "Unsanitized user input used in command execution",
+            "severity": "high",
+            "file": os.path.join(java_app_path, "src/main/java/com/example/demo/VulnerableApplication.java"),
+            "line": 60,
+            "code": "Process process = Runtime.getRuntime().exec(cmd);",
+            "cwe": "CWE-78",
+            "remediation": "Validate and sanitize user input before using in command execution"
+        },
+        {
+            "id": "JAVA-HARDCODED-CREDS-1",
+            "title": "Hardcoded Credentials",
+            "description": "Hardcoded API key and password in source code",
+            "severity": "medium",
+            "file": os.path.join(java_app_path, "src/main/java/com/example/demo/VulnerableApplication.java"),
+            "line": 20,
+            "code": "private static final String API_KEY = \"hardcoded_java_secret_key_12345\";",
+            "cwe": "CWE-798",
+            "remediation": "Store secrets in environment variables or a secure vault"
+        }
+    ]
+    
+    print(f"🔍 Found {len(findings)} potential vulnerabilities")
+    
+    return {
+        "app_name": "Java Spring Demo App",
+        "app_path": java_app_path,
+        "findings": findings,
+        "scan_type": "SAST (Java)"
+    }
+
+def scan_go_gin_app():
+    """Scan the Go Gin demo app for vulnerabilities"""
+    print("\n=== Scanning Go Gin Demo App ===")
+    
+    go_app_path = os.path.join(os.path.dirname(__file__), 'demo-apps', 'go-gin')
+    
+    if not os.path.exists(go_app_path):
+        print(f"❌ Go Gin demo app not found at {go_app_path}")
+        return None
+    
+    print(f"📂 Scanning files in {go_app_path}")
+    
+    # Mock findings for demonstration
+    findings = [
+        {
+            "id": "GO-SQL-INJECTION-1",
+            "title": "SQL Injection Vulnerability",
+            "description": "Unsanitized user input used in SQL query",
+            "severity": "high",
+            "file": os.path.join(go_app_path, "main.go"),
+            "line": 45,
+            "code": "query := fmt.Sprintf(\"SELECT * FROM users WHERE id = %s\", id)",
+            "cwe": "CWE-89",
+            "remediation": "Use parameterized queries with prepared statements"
+        },
+        {
+            "id": "GO-CMD-INJECTION-1",
+            "title": "Command Injection Vulnerability",
+            "description": "Unsanitized user input used in command execution",
+            "severity": "high",
+            "file": os.path.join(go_app_path, "main.go"),
+            "line": 82,
+            "code": "command := exec.Command(\"sh\", \"-c\", cmd)",
+            "cwe": "CWE-78",
+            "remediation": "Validate and sanitize user input before using in command execution"
+        },
+        {
+            "id": "GO-HARDCODED-CREDS-1",
+            "title": "Hardcoded Credentials",
+            "description": "Hardcoded API key and password in source code",
+            "severity": "medium",
+            "file": os.path.join(go_app_path, "main.go"),
+            "line": 14,
+            "code": "const API_KEY = \"hardcoded_go_secret_key_12345\"",
+            "cwe": "CWE-798",
+            "remediation": "Store secrets in environment variables or a secure vault"
+        }
+    ]
+    
+    print(f"🔍 Found {len(findings)} potential vulnerabilities")
+    
+    return {
+        "app_name": "Go Gin Demo App",
+        "app_path": go_app_path,
+        "findings": findings,
+        "scan_type": "SAST (Go)"
+    }
+
 def main():
     """Main function to scan demo apps and generate reports"""
     print("=== AutoThreatMap Demo Apps Vulnerability Scanner ===")
@@ -176,6 +292,16 @@ def main():
     express_results = scan_node_express_app()
     if express_results:
         scan_results.append(express_results)
+    
+    # Scan Java Spring app
+    java_results = scan_java_spring_app()
+    if java_results:
+        scan_results.append(java_results)
+    
+    # Scan Go Gin app
+    go_results = scan_go_gin_app()
+    if go_results:
+        scan_results.append(go_results)
     
     # Generate comprehensive report
     report_path = generate_vulnerability_report(scan_results)

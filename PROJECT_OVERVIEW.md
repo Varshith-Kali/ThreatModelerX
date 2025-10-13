@@ -154,7 +154,8 @@ auto-threatmap/
 ├── docs/                         # Comprehensive documentation
 │   ├── DEMO_SCRIPT.md           # Interview demo guide
 │   ├── RESUME_BULLETS.md        # Career materials
-│   └── QUICK_START.md           # Setup guide
+│   ├── QUICK_START.md           # Setup guide
+│   └── REPORT_TEMPLATES.md      # Report customization guide
 │
 ├── .github/
 │   └── workflows/
@@ -164,6 +165,28 @@ auto-threatmap/
 ├── README.md                     # Main documentation
 └── PROJECT_OVERVIEW.md          # This file
 ```
+
+## Recent Updates
+
+### 2023-10-13: Enhanced Reporting and Testing Framework
+- Created professional single-page HTML report template
+- Established organized folder structure for test scripts
+- Fixed dependency issues (pdfkit, aiohttp, python-owasp-zap-v2.4)
+- Resolved syntax errors in backend/app/main.py
+- Implemented comprehensive vulnerability scanning for demo applications
+- Added support for custom report templates
+
+### 2023-06-15: Enhanced Threat Modeling
+- Added STRIDE framework integration
+- Implemented MITRE ATT&CK mapping
+- Enhanced risk scoring algorithm
+- Improved remediation suggestions
+
+### 2023-06-01: Initial Release
+- Completed core scanning functionality
+- Integrated Semgrep, Bandit, and Retire.js
+- Implemented basic report generation
+- Added demo applications for testing
 
 ---
 

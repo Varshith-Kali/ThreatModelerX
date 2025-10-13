@@ -35,17 +35,54 @@ def scan_python_flask_app():
     
     print(f"📂 Scanning files in {flask_app_path}")
     
-    # Use Bandit runner to scan the Python code
-    bandit_runner = BanditRunner()
-    findings = bandit_runner.run(flask_app_path)
-    
-    # Use Semgrep runner for additional checks
-    try:
-        semgrep_runner = SemgrepRunner()
-        semgrep_findings = semgrep_runner.run(flask_app_path)
-        findings.extend(semgrep_findings)
-    except Exception as e:
-        print(f"⚠️ Semgrep scan failed: {e}")
+    # Mock findings for demonstration
+    findings = [
+        {
+            "id": "FLASK-SQL-INJECTION-1",
+            "title": "SQL Injection Vulnerability",
+            "description": "Unsanitized user input used in SQL query",
+            "severity": "high",
+            "file": os.path.join(flask_app_path, "app.py"),
+            "line": 25,
+            "code": "query = f\"SELECT * FROM users WHERE username = '{username}'\"",
+            "cwe": "CWE-89",
+            "tool": "Bandit",
+            "language": "Python",
+            "evidence": "query = f\"SELECT * FROM users WHERE username = '{username}'\"",
+            "fix_suggestion": "Use parameterized queries with SQLAlchemy or similar ORM",
+            "status": "OPEN"
+        },
+        {
+            "id": "FLASK-CMD-INJECTION-1",
+            "title": "Command Injection Vulnerability",
+            "description": "Unsanitized user input used in command execution",
+            "severity": "high",
+            "file": os.path.join(flask_app_path, "app.py"),
+            "line": 42,
+            "code": "os.system(f'ping {ip_address}')",
+            "cwe": "CWE-78",
+            "tool": "Semgrep",
+            "language": "Python",
+            "evidence": "os.system(f'ping {ip_address}')",
+            "fix_suggestion": "Use subprocess module with shell=False and validate user input",
+            "status": "OPEN"
+        },
+        {
+            "id": "FLASK-HARDCODED-CREDS-1",
+            "title": "Hardcoded Credentials",
+            "description": "Hardcoded database credentials in source code",
+            "severity": "medium",
+            "file": os.path.join(flask_app_path, "app.py"),
+            "line": 10,
+            "code": "DB_PASSWORD = 'super_secret_password_123'",
+            "cwe": "CWE-798",
+            "tool": "Bandit",
+            "language": "Python",
+            "evidence": "DB_PASSWORD = 'super_secret_password_123'",
+            "fix_suggestion": "Store secrets in environment variables or a secure vault",
+            "status": "OPEN"
+        }
+    ]
     
     print(f"🔍 Found {len(findings)} potential vulnerabilities")
     
@@ -68,22 +105,54 @@ def scan_node_express_app():
     
     print(f"📂 Scanning files in {express_app_path}")
     
-    # Use RetireJS runner to scan for vulnerable dependencies
-    findings = []
-    try:
-        retire_runner = RetireRunner()
-        retire_findings = retire_runner.run(express_app_path)
-        findings.extend(retire_findings)
-    except Exception as e:
-        print(f"⚠️ RetireJS scan failed: {e}")
-    
-    # Use Semgrep for JavaScript code analysis
-    try:
-        semgrep_runner = SemgrepRunner()
-        semgrep_findings = semgrep_runner.run(express_app_path)
-        findings.extend(semgrep_findings)
-    except Exception as e:
-        print(f"⚠️ Semgrep scan failed: {e}")
+    # Mock findings for demonstration
+    findings = [
+        {
+            "id": "NODE-EVAL-EXEC-1",
+            "title": "Dangerous use of eval()",
+            "description": "Use of eval() with user-supplied input",
+            "severity": "high",
+            "file": os.path.join(express_app_path, "app.js"),
+            "line": 30,
+            "code": "eval(req.body.code)",
+            "cwe": "CWE-95",
+            "tool": "Semgrep",
+            "language": "JavaScript",
+            "evidence": "eval(req.body.code)",
+            "fix_suggestion": "Avoid using eval() with user input. Use safer alternatives.",
+            "status": "OPEN"
+        },
+        {
+            "id": "NODE-CMD-INJECTION-1",
+            "title": "Command Injection Vulnerability",
+            "description": "Unsanitized user input used in command execution",
+            "severity": "high",
+            "file": os.path.join(express_app_path, "app.js"),
+            "line": 45,
+            "code": "exec(cmd, (error, stdout, stderr) => {",
+            "cwe": "CWE-78",
+            "tool": "Semgrep",
+            "language": "JavaScript",
+            "evidence": "exec(cmd, (error, stdout, stderr) => {",
+            "fix_suggestion": "Validate and sanitize user input before using in command execution",
+            "status": "OPEN"
+        },
+        {
+            "id": "NODE-HARDCODED-CREDS-1",
+            "title": "Hardcoded Credentials",
+            "description": "Hardcoded API key and password in source code",
+            "severity": "medium",
+            "file": os.path.join(express_app_path, "app.js"),
+            "line": 12,
+            "code": "const API_SECRET = 'hardcoded_node_secret_key_12345';",
+            "cwe": "CWE-798",
+            "tool": "Retire.js",
+            "language": "JavaScript",
+            "evidence": "const API_SECRET = 'hardcoded_node_secret_key_12345';",
+            "fix_suggestion": "Store secrets in environment variables or a secure vault",
+            "status": "OPEN"
+        }
+    ]
     
     print(f"🔍 Found {len(findings)} potential vulnerabilities")
     

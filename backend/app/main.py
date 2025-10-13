@@ -13,11 +13,13 @@ from .models import (
     ScanRequest, ScanResult, Finding, Threat,
     RemediationPlan, SeverityLevel
 )
-from .scanner import SemgrepRunner, BanditRunner, RetireRunner
+from .scanner import SemgrepRunner, BanditRunner, RetireRunner, ZapRunner, SpotBugsRunner, GosecRunner
 from .threatmodel import StrideMapper
 from .architecture import ArchitectureAnalyzer
 from .workers.risk_scorer import RiskScorer
 from .workers.remediation_planner import RemediationPlanner
+from .workers.report_generator import ReportGenerator
+from .workers.email_notifier import EmailNotifier
 
 # Configure logging
 logging.basicConfig(
@@ -179,8 +181,8 @@ async def add_finding_review(finding_id: str, review_data: dict):
     raise HTTPException(status_code=404, detail=f"Finding {finding_id} not found")
 
 @app.post("/api/export/{scan_id}")
-async def export_report(scan_id: str, export_format: str = "json"):
-    """Export scan results in various formats"""
+async def export_report(scan_id: str, export_format: str = "json", email: Optional[str] = None):
+    """Export scan results in various formats and optionally email the report"""
     if scan_id not in scan_results_store:
         raise HTTPException(status_code=404, detail=f"Scan {scan_id} not found")
         
@@ -189,15 +191,43 @@ async def export_report(scan_id: str, export_format: str = "json"):
         raise HTTPException(status_code=404, detail="Scan results not found")
         
     if export_format == "json":
-        return scan_data
-    elif export_format == "html":
-        # In a real implementation, this would use a template engine
-        # For now, return a simple HTML representation
-        findings_html = "".join([f"<li>{f['id']}: {f['description']} ({f['severity']})</li>" for f in scan_data.get('findings', [])])
-        threats_html = "".join([f"<li>{t['id']}: {t['description']} ({t['category']})</li>" for t in scan_data.get('threats', [])])
-        
-        html = f"""
-        <html>
+        result = scan_data
+    elif export_format in ["html", "pdf"]:
+        # Use the ReportGenerator to create HTML or PDF reports
+        report_generator = ReportGenerator()
+        try:
+            report_path = report_generator.generate_report(scan_data, format=export_format)
+            
+            # If email is provided, send the report via email
+            if email:
+                try:
+                    email_notifier = EmailNotifier()
+                    email_notifier.send_notification(
+                        subject=f"Security Scan Report: {scan_id}",
+                        message=f"Please find attached the security scan report for {scan_id}.",
+                        recipients=[email],
+                        attachment_path=report_path
+                    )
+                    
+                    logger.info(f"Report for scan {scan_id} sent to {email}")
+                except Exception as email_error:
+                    logger.error(f"Failed to send email with report: {str(email_error)}")
+                    # Continue execution to return the report even if email fails
+            
+            # In a real implementation, we would return the file for download
+            # For now, return the path to the generated report
+            return {
+                "status": "success",
+                "report_format": export_format,
+                "report_path": report_path,
+                "email_sent": email is not None,
+                "message": f"{export_format.upper()} report generated successfully"
+            }
+        except Exception as e:
+            logger.error(f"Error generating {export_format} report: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to generate {export_format} report: {str(e)}")
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported export format: {export_format}")
         <head><title>Security Scan Report - {scan_id}</title></head>
         <body>
             <h1>Security Scan Report</h1>
@@ -536,15 +566,19 @@ async def run_scan(scan_id: str, request: ScanRequest):
             "error": str(e),
             "failed_at": datetime.utcnow().isoformat()
         }
+        
+        # Send email notification about failed scan
+        try:
+            email_notifier = EmailNotifier()
+            email_notifier.send_notification(
+                subject=f"Scan Failed: {scan_id}",
+                message=f"Scan failed with error: {str(e)}\n\nRepository: {repo_path}",
+                recipients=[request.notification_email] if hasattr(request, 'notification_email') else None
+            )
+        except Exception as email_error:
+            logger.error(f"Failed to send email notification: {str(email_error)}")
+            
         raise
-
-    except Exception as e:
-        logger.error(f"Scan failed: {str(e)}")
-        scan_results_store[scan_id] = {
-            "status": "failed",
-            "error": str(e),
-            "failed_at": datetime.utcnow().isoformat()
-        }
 
 @app.get("/api/scan/{scan_id}")
 @app.get("/scan/{scan_id}")  # Add additional route to match frontend request

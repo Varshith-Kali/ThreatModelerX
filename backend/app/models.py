@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field, HttpUrl
+from typing import List, Optional, Dict, Any, Union
 from enum import Enum
 from datetime import datetime
 
@@ -60,7 +60,12 @@ class Threat(BaseModel):
 class ScanRequest(BaseModel):
     repo_path: str
     scan_types: List[str] = ["sast", "dast", "threat_model"]
-    target_url: Optional[str] = None
+    target_url: Optional[HttpUrl] = None
+    include_dast: bool = False
+    email_notification: bool = False
+    notification_email: Optional[str] = None
+    export_format: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class ScanResult(BaseModel):
     scan_id: str

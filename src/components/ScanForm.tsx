@@ -22,6 +22,8 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
   const demoApps = [
     { value: './demo-apps/python-flask', label: 'Python Flask (Vulnerable Demo)' },
     { value: './demo-apps/node-express', label: 'Node.js Express (Vulnerable Demo)' },
+    { value: './demo-apps/java-spring', label: 'Java Spring (Vulnerable Demo)' },
+    { value: './demo-apps/go-gin', label: 'Go Gin (Vulnerable Demo)' },
   ];
 
   const availableScanTypes = [
@@ -41,8 +43,8 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
       // Just use the path as is - backend will handle resolution
       let finalPath = repoPath;
 
-      // Try with /scan endpoint first (which is aliased to /api/scan in the backend)
-      const response = await fetch(`${API_BASE}/scan`, {
+      // Use the /api/scan endpoint
+      const response = await fetch(`${API_BASE}/api/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,7 +89,7 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
     const interval = setInterval(async () => {
       try {
         console.log(`Polling scan status for ${id}, attempt ${retryCount + 1}`);
-        const response = await fetch(`${API_BASE}/scan/${id}`);
+        const response = await fetch(`${API_BASE}/api/scan/${id}`);
         
         if (!response.ok) {
           console.error(`Scan status check failed: HTTP ${response.status}`);

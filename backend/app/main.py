@@ -228,9 +228,6 @@ async def export_report(scan_id: str, export_format: str = "json", email: Option
             raise HTTPException(status_code=500, detail=f"Failed to generate {export_format} report: {str(e)}")
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported export format: {export_format}")
-        return JSONResponse(content={"html": html})
-    else:
-        raise HTTPException(status_code=400, detail=f"Unsupported export format: {export_format}")
 
 class CustomJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder that handles datetime objects"""

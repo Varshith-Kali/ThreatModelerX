@@ -1,0 +1,140 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{{ report.title }}</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+                h1, h2, h3 {
+                    color: #2c3e50;
+                }
+                .header {
+                    background-color: #34495e;
+                    color: white;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    border-radius: 5px;
+                }
+                .summary {
+                    background-color: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 5px;
+                    margin-bottom: 20px;
+                }
+                .findings-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                .findings-table th, .findings-table td {
+                    border: 1px solid #ddd;
+                    padding: 12px;
+                    text-align: left;
+                }
+                .findings-table th {
+                    background-color: #f2f2f2;
+                }
+                .findings-table tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+                .severity-critical {
+                    background-color: #ffdddd;
+                }
+                .severity-high {
+                    background-color: #ffeecc;
+                }
+                .severity-medium {
+                    background-color: #ffffcc;
+                }
+                .severity-low {
+                    background-color: #e6ffe6;
+                }
+                .footer {
+                    margin-top: 30px;
+                    text-align: center;
+                    font-size: 0.8em;
+                    color: #7f8c8d;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>{{ report.title }}</h1>
+                <p>Generated: {{ report.timestamp }}</p>
+            </div>
+            
+            <div class="summary">
+                <h2>Executive Summary</h2>
+                <p>Scan ID: {{ report.scan_id }}</p>
+                <p>Repository: {{ report.repo_path }}</p>
+                <p>Total Findings: {{ report.total_findings }}</p>
+                <ul>
+                    <li>Critical: {{ report.critical_count }}</li>
+                    <li>High: {{ report.high_count }}</li>
+                    <li>Medium: {{ report.medium_count }}</li>
+                    <li>Low: {{ report.low_count }}</li>
+                </ul>
+                <p>Total Threats: {{ report.total_threats }}</p>
+            </div>
+            
+            <h2>Findings</h2>
+            <table class="findings-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Severity</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>CWE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for finding in report.findings %}
+                    <tr class="severity-{{ finding.severity|lower }}">
+                        <td>{{ finding.id }}</td>
+                        <td>{{ finding.severity }}</td>
+                        <td>{{ finding.description }}</td>
+                        <td>{{ finding.file }}{% if finding.line %}:{{ finding.line }}{% endif %}</td>
+                        <td>{% if finding.cwe %}CWE-{{ finding.cwe }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <h2>Threats</h2>
+            <table class="findings-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Component</th>
+                        <th>Attack Vector</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for threat in report.threats %}
+                    <tr>
+                        <td>{{ threat.category }}</td>
+                        <td>{{ threat.description }}</td>
+                        <td>{{ threat.component }}</td>
+                        <td>{{ threat.attack_vector }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <p>Generated by AutoThreatMap v1.0.0</p>
+            </div>
+        </body>
+        </html>
+        

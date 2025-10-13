@@ -228,16 +228,6 @@ async def export_report(scan_id: str, export_format: str = "json", email: Option
             raise HTTPException(status_code=500, detail=f"Failed to generate {export_format} report: {str(e)}")
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported export format: {export_format}")
-        <head><title>Security Scan Report - {scan_id}</title></head>
-        <body>
-            <h1>Security Scan Report</h1>
-            <h2>Findings</h2>
-            <ul>{findings_html}</ul>
-            <h2>Threats</h2>
-            <ul>{threats_html}</ul>
-        </body>
-        </html>
-        """
         return JSONResponse(content={"html": html})
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported export format: {export_format}")

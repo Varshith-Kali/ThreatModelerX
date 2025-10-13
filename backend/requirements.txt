@@ -19,3 +19,6 @@ requests==2.31.0
 pyyaml==6.0.1
 python-dotenv==1.0.0
 supabase==2.3.0
+aiohttp==3.9.1
+pdfkit==1.0.0
+python-zaproxy==0.3.0

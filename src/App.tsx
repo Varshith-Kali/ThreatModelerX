@@ -22,7 +22,7 @@ function App() {
       <header className="bg-secondary py-4 px-6 border-b border-highlight shadow-md">
         <div className="flex justify-between items-center max-w-screen-2xl mx-auto w-full">
           <div className="flex items-center">
-            <img src="/logo.png" alt="ThreatModelerX" className="h-8 w-8 mr-3" />
+            <img src="/logo.png" alt="ThreatModelerX" className="h-8 w-8 mr-3 brightness-0 invert" />
             <h1 className="text-2xl font-bold text-accent-DEFAULT">ThreatModelerX</h1>
           </div>
           <nav className="flex space-x-4">

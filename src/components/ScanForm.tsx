@@ -178,7 +178,7 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
             <PlayCircle className="h-8 w-8 text-accent-DEFAULT" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-text-primary tracking-tight">New Security Scan</h1>
+            <h1 className="text-3xl font-bold text-text-primary tracking-tight">New ThreatModelerX Scan</h1>
             <p className="text-text-secondary mt-1">Configure and launch a comprehensive security analysis</p>
           </div>
         </div>
@@ -195,8 +195,8 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
                   key={app.value}
                   onClick={() => !scanning && setRepoPath(app.value)}
                   className={`p-4 rounded-lg border cursor-pointer transition-all duration-300 ${repoPath === app.value
-                      ? 'bg-accent-DEFAULT/10 border-accent-DEFAULT ring-1 ring-accent-DEFAULT'
-                      : 'bg-secondary border-highlight hover:border-accent-DEFAULT/50 hover:bg-secondary-light'
+                    ? 'bg-accent-DEFAULT/10 border-accent-DEFAULT ring-1 ring-accent-DEFAULT'
+                    : 'bg-secondary border-highlight hover:border-accent-DEFAULT/50 hover:bg-secondary-light'
                     } ${scanning ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center mb-2">
@@ -234,8 +234,8 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
                 <label
                   key={type.value}
                   className={`flex items-start p-4 rounded-lg border cursor-pointer transition-all duration-300 ${scanTypes.includes(type.value)
-                      ? 'bg-accent-DEFAULT/10 border-accent-DEFAULT'
-                      : 'bg-secondary border-highlight hover:border-accent-DEFAULT/50 hover:bg-secondary-light'
+                    ? 'bg-accent-DEFAULT/10 border-accent-DEFAULT'
+                    : 'bg-secondary border-highlight hover:border-accent-DEFAULT/50 hover:bg-secondary-light'
                     } ${scanning ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center h-5 mt-1">
@@ -269,7 +269,7 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
             {scanning ? (
               <>
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Running Security Scan...</span>
+                <span>Running ThreatModelerX Scan...</span>
               </>
             ) : (
               <>

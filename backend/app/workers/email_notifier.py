@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from ..models import Finding, SeverityLevel, ScanRequest
 
-logger = logging.getLogger("autothreatmap.workers.email_notifier")
+logger = logging.getLogger("threatmodelx.workers.email_notifier")
 
 class EmailNotifier:
     """
@@ -134,7 +134,7 @@ class EmailNotifier:
         
         html += """
                 <div class="footer">
-                    <p>This is an automated security alert from AutoThreatMap. Please address these issues promptly.</p>
+                    <p>This is an automated security alert from ThreatModelerX. Please address these issues promptly.</p>
                 </div>
             </div>
         </body>

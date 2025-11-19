@@ -1,10 +1,10 @@
-# AutoThreatMap
+# ThreatModelerX
 
-**Automated Security Analysis and Threat Modeling Platform**
+> **Automated Security Analysis & Threat Modeling Platform**
 
-AutoThreatMap is an open-source security automation platform that integrates SAST (Static Application Security Testing), threat modeling, and risk prioritization to automatically identify, map, and remediate application security risks across multiple programming languages.
+ThreatModelerX is an open-source security automation platform that integrates SAST (Static Application Security Testing), threat modeling, and risk prioritization to automatically identify, map, and remediate application security risks across multiple programming languages.
 
-![AutoThreatMap Dashboard](docs/screenshots/dashboard.png)
+![ThreatModelerX Dashboard](docs/screenshots/dashboard.png)
 
 ## Features
 

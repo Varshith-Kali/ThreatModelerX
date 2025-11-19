@@ -10,7 +10,7 @@ from ..models import Finding, SeverityLevel, FindingStatus
 class SemgrepRunner:
     def __init__(self):
         self.tool_name = "semgrep"
-        self.logger = logging.getLogger("autothreatmap")
+        self.logger = logging.getLogger("threatmodelx")
 
     def run(self, repo_path: str) -> List[Finding]:
         findings = []

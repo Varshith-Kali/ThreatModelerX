@@ -26,10 +26,10 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-logger = logging.getLogger("autothreatmap")
+logger = logging.getLogger("threatmodelx")
 
 app = FastAPI(
-    title="AutoThreatMap API",
+    title="ThreatModelerX API",
     description="Automated Security Analysis and Threat Modeling Platform",
     version="1.0.0"
 )
@@ -127,7 +127,7 @@ scan_results_store = PersistentTTLCache(max_size=100, ttl=86400)  # Store up to 
 @app.get("/")
 async def root():
     return {
-        "name": "AutoThreatMap",
+        "name": "ThreatModelerX",
         "version": "1.0.0",
         "status": "operational",
         "endpoints": {

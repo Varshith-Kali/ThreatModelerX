@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script to scan demo applications for vulnerabilities using AutoThreatMap
+Script to scan demo applications for vulnerabilities using ThreatModelerX
 """
 import os
 import sys
@@ -172,7 +172,7 @@ def generate_vulnerability_report(scan_results):
 
 def main():
     """Main function to scan demo apps and generate reports"""
-    print("=== AutoThreatMap Demo Apps Vulnerability Scanner ===")
+    print("=== ThreatModelerX Demo Apps Vulnerability Scanner ===")
     
     scan_results = []
     

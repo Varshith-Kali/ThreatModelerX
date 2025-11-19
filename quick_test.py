@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick test script for AutoThreatMap enhancements
+Quick test script for ThreatModelerX enhancements
 """
 import os
 import sys
@@ -295,7 +295,7 @@ def test_demo_apps():
 
 def main():
     """Main test function"""
-    print("\n=== Testing AutoThreatMap Enhancements ===\n")
+    print("\n=== Testing ThreatModelerX Enhancements ===\n")
     
     # Test results
     results = {

@@ -1,0 +1,31 @@
+﻿
+=== Testing AutoThreatMap Enhancements ===
+
+Attempting to import app.workers.email_notifier
+[PASS] EmailNotifier module imported successfully
+[PASS] Email Notifier instance created successfully
+[PASS] Report Generator module imported successfully
+[PASS] Report Generator instance created successfully
+[PASS] ScanRequest model has been updated with new fields
+[WARN] zapv2 not available, using mock implementation
+[PASS] ZAP Runner module imported successfully
+[PASS] ZAP Runner instance created successfully
+[PASS] SpotBugs Runner module imported successfully
+[PASS] SpotBugs Runner instance created successfully
+[PASS] Gosec Runner module imported successfully
+[PASS] Gosec Runner instance created successfully
+[PASS] Python Flask demo app found
+[PASS] Node Express demo app found
+[PASS] Demo apps verified successfully
+
+=== Test Results Summary ===
+
+Email Notifications: PASSED
+Report Generation: PASSED
+Model Updates: PASSED
+DAST Integration (ZAP): PASSED
+Java Scanner (SpotBugs): PASSED
+Go Scanner (gosec): PASSED
+Demo Apps: PASSED
+
+[PASS] All tests passed!

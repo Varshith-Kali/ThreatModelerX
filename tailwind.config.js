@@ -5,38 +5,42 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#1A1A1A', // Dark charcoal (background)
-          light: '#2A2A2A',   // Slightly lighter charcoal
+          DEFAULT: '#050505', // Very dark almost black
+          light: '#0a0a0a',   // Slightly lighter
         },
         secondary: {
-          DEFAULT: '#282828', // Dark grey (card backgrounds)
-          light: '#3A3A3A',   // Medium grey (hover states)
+          DEFAULT: '#121212', // Material Design Dark Surface
+          light: '#1e1e1e',   // Lighter surface
         },
         accent: {
-          DEFAULT: '#FFFFFF', // White (for accent elements)
-          light: '#F5F5F5',   // Off-white
+          DEFAULT: '#00E5FF', // Cyan Neon
+          light: '#E0F7FA',   // Very light cyan
+          hover: '#00B8D4',   // Darker cyan
         },
         text: {
-          primary: '#FFFFFF', // White text
-          secondary: '#E0E0E0', // Light grey text
-          muted: '#999999',   // Muted grey text
+          primary: '#FFFFFF', // White
+          secondary: '#B0BEC5', // Blue Grey
+          muted: '#78909C',   // Muted Blue Grey
         },
         brand: {
-          DEFAULT: '#FFFFFF', // White for brand elements
+          DEFAULT: '#00E5FF', // Cyan Neon
         },
         highlight: {
-          DEFAULT: '#444444', // Highlight color for hover states
+          DEFAULT: '#263238', // Dark Blue Grey
         },
-        // Override all blue-related colors
-        blue: '#444444',
-        cyan: '#444444',
-        sky: '#444444',
-        indigo: '#444444',
-        // Override severity colors
-        critical: '#444444',
-        high: '#444444',
-        medium: '#444444',
-        low: '#444444'
+        // Override all blue-related colors to match theme
+        blue: {
+          50: '#E0F7FA',
+          100: '#B2EBF2',
+          500: '#00BCD4',
+          600: '#00ACC1',
+          700: '#0097A7',
+        },
+        // Override severity colors for dark mode
+        critical: '#FF5252', // Red A200
+        high: '#FFAB40',     // Orange A200
+        medium: '#FFD740',   // Amber A200
+        low: '#69F0AE'       // Green A200
       },
     },
   },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, AlertTriangle, Target, UserX, FileWarning, Clock, FileX, Zap, UserPlus } from 'lucide-react';
+import { Shield, AlertTriangle, Target, UserX, FileWarning, Clock, FileX, Zap, UserPlus, Filter } from 'lucide-react';
 
 interface ThreatViewProps {
   scanId: string | null;
@@ -48,24 +48,24 @@ function ThreatView({ scanId }: ThreatViewProps) {
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      SPOOFING: 'bg-purple-700 text-white border-purple-600',
-      TAMPERING: 'bg-red-700 text-white border-red-600',
-      REPUDIATION: 'bg-yellow-600 text-white border-yellow-500',
-      INFORMATION_DISCLOSURE: 'bg-blue-700 text-white border-blue-600',
-      DENIAL_OF_SERVICE: 'bg-orange-600 text-white border-orange-500',
-      ELEVATION_OF_PRIVILEGE: 'bg-red-600 text-white border-red-500'
+      SPOOFING: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+      TAMPERING: 'bg-red-500/10 text-red-400 border-red-500/30',
+      REPUDIATION: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+      INFORMATION_DISCLOSURE: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+      DENIAL_OF_SERVICE: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
+      ELEVATION_OF_PRIVILEGE: 'bg-pink-500/10 text-pink-400 border-pink-500/30'
     };
-    return colors[category] || 'bg-primary-light/20 text-accent border-highlight';
+    return colors[category] || 'bg-primary-light text-accent-DEFAULT border-highlight';
   };
 
   const getSeverityColor = (severity: string) => {
     const colors: Record<string, string> = {
-      CRITICAL: 'bg-red-700 text-white',
-      HIGH: 'bg-red-600 text-white',
-      MEDIUM: 'bg-orange-500 text-white',
-      LOW: 'bg-blue-500 text-white'
+      CRITICAL: 'bg-critical/10 text-critical border border-critical/30',
+      HIGH: 'bg-high/10 text-high border border-high/30',
+      MEDIUM: 'bg-medium/10 text-medium border border-medium/30',
+      LOW: 'bg-low/10 text-low border border-low/30'
     };
-    return colors[severity] || 'bg-secondary-light text-accent';
+    return colors[severity] || 'bg-secondary-light text-accent-DEFAULT';
   };
 
   const filteredThreats = selectedCategory === 'all'
@@ -81,116 +81,129 @@ function ThreatView({ scanId }: ThreatViewProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-highlight"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-DEFAULT"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-accent">Security Threats</h1>
+        <h1 className="text-3xl font-bold text-text-primary tracking-tight">Security Threats</h1>
         <div className="flex items-center space-x-4">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-secondary border border-highlight rounded-lg px-4 py-2 text-accent focus:outline-none focus:ring-2 focus:ring-highlight focus:border-highlight shadow-md"
-          >
-            <option value="all">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>{cat.replace(/_/g, ' ')}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-secondary border border-highlight rounded-lg text-text-primary focus:outline-none focus:border-accent-DEFAULT transition-colors appearance-none cursor-pointer shadow-md"
+            >
+              <option value="all">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>{cat.replace(/_/g, ' ')}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categoryStats.map(({ category, count }) => (
+        {categoryStats.map(({ category, count }, index) => (
           <div
             key={category}
-            className={`p-4 rounded-lg border ${getCategoryColor(category)} cursor-pointer hover:opacity-80 transition-opacity shadow-lg hover:shadow-xl transition-all`}
+            className={`p-4 rounded-lg border ${getCategoryColor(category)} cursor-pointer hover:opacity-80 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1`}
             onClick={() => setSelectedCategory(category)}
+            style={{ animationDelay: `${index * 100}ms` }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">{category.replace(/_/g, ' ')}</p>
-                <p className="text-sm opacity-75">{count} threat{count !== 1 ? 's' : ''}</p>
+                <p className="font-bold text-lg">{category.replace(/_/g, ' ')}</p>
+                <p className="text-sm opacity-75 mt-1">{count} threat{count !== 1 ? 's' : ''}</p>
               </div>
-              {category === 'SPOOFING' && <UserX className="h-8 w-8 opacity-80" />}
-              {category === 'TAMPERING' && <FileWarning className="h-8 w-8 opacity-80" />}
-              {category === 'REPUDIATION' && <Clock className="h-8 w-8 opacity-80" />}
-              {category === 'INFORMATION_DISCLOSURE' && <FileX className="h-8 w-8 opacity-80" />}
-              {category === 'DENIAL_OF_SERVICE' && <Zap className="h-8 w-8 opacity-80" />}
-              {category === 'ELEVATION_OF_PRIVILEGE' && <UserPlus className="h-8 w-8 opacity-80" />}
-              {!['SPOOFING', 'TAMPERING', 'REPUDIATION', 'INFORMATION_DISCLOSURE', 'DENIAL_OF_SERVICE', 'ELEVATION_OF_PRIVILEGE'].includes(category) && 
-                <Shield className="h-8 w-8 opacity-80" />
-              }
+              <div className="p-2 rounded-full bg-black/20">
+                {category === 'SPOOFING' && <UserX className="h-6 w-6" />}
+                {category === 'TAMPERING' && <FileWarning className="h-6 w-6" />}
+                {category === 'REPUDIATION' && <Clock className="h-6 w-6" />}
+                {category === 'INFORMATION_DISCLOSURE' && <FileX className="h-6 w-6" />}
+                {category === 'DENIAL_OF_SERVICE' && <Zap className="h-6 w-6" />}
+                {category === 'ELEVATION_OF_PRIVILEGE' && <UserPlus className="h-6 w-6" />}
+                {!['SPOOFING', 'TAMPERING', 'REPUDIATION', 'INFORMATION_DISCLOSURE', 'DENIAL_OF_SERVICE', 'ELEVATION_OF_PRIVILEGE'].includes(category) &&
+                  <Shield className="h-6 w-6" />
+                }
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-secondary-dark rounded-xl p-6 border border-secondary shadow-lg">
-        <h2 className="text-xl font-bold text-accent mb-4">
+      <div className="card p-6">
+        <h2 className="text-xl font-bold text-text-primary mb-6 flex items-center">
+          <Shield className="mr-2 h-5 w-5 text-accent-DEFAULT" />
           {filteredThreats.length} Threat{filteredThreats.length !== 1 ? 's' : ''} Identified
         </h2>
 
         {filteredThreats.length === 0 ? (
-          <div className="text-center py-12 shadow-lg">
-            <Shield className="h-16 w-16 text-highlight mx-auto mb-4" />
-            <p className="text-accent text-lg">No threats found in this category</p>
+          <div className="text-center py-16 bg-primary-light/30 rounded-lg border border-dashed border-highlight">
+            <Shield className="h-16 w-16 text-low mx-auto mb-4 animate-pulse" />
+            <p className="text-text-primary text-lg font-medium">No threats found in this category</p>
+            <p className="text-text-secondary mt-2">Your system appears secure against these specific threats.</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredThreats.map((threat) => (
+            {filteredThreats.map((threat, index) => (
               <div
                 key={threat.id}
-                className="bg-secondary/80 rounded-lg border border-secondary p-4 shadow-md hover:shadow-lg transition-all"
+                className="bg-secondary/50 rounded-lg border border-highlight p-6 shadow-md hover:shadow-lg hover:border-accent-DEFAULT/50 transition-all duration-300 group"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <span className={`px-3 py-1 rounded text-sm font-medium border ${getCategoryColor(threat.category)}`}>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center flex-wrap gap-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider ${getCategoryColor(threat.category)}`}>
                       {threat.category.replace(/_/g, ' ')}
                     </span>
-                    <span className={`px-3 py-1 rounded text-sm text-accent ${getSeverityColor(threat.risk_level)}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${getSeverityColor(threat.risk_level)}`}>
                       {threat.risk_level}
                     </span>
                   </div>
-                  {threat.category === 'SPOOFING' && <UserX className="h-6 w-6 text-purple-500 flex-shrink-0" />}
-                  {threat.category === 'TAMPERING' && <FileWarning className="h-6 w-6 text-red-500 flex-shrink-0" />}
-                  {threat.category === 'REPUDIATION' && <Clock className="h-6 w-6 text-yellow-500 flex-shrink-0" />}
-                  {threat.category === 'INFORMATION_DISCLOSURE' && <FileX className="h-6 w-6 text-blue-500 flex-shrink-0" />}
-                  {threat.category === 'DENIAL_OF_SERVICE' && <Zap className="h-6 w-6 text-orange-500 flex-shrink-0" />}
-                  {threat.category === 'ELEVATION_OF_PRIVILEGE' && <UserPlus className="h-6 w-6 text-red-500 flex-shrink-0" />}
-                  {!['SPOOFING', 'TAMPERING', 'REPUDIATION', 'INFORMATION_DISCLOSURE', 'DENIAL_OF_SERVICE', 'ELEVATION_OF_PRIVILEGE'].includes(threat.category) && 
-                    <AlertTriangle className="h-6 w-6 text-highlight flex-shrink-0" />
-                  }
+                  <div className="p-2 rounded-full bg-primary-light group-hover:bg-accent-DEFAULT/10 transition-colors">
+                    {threat.category === 'SPOOFING' && <UserX className="h-5 w-5 text-purple-400" />}
+                    {threat.category === 'TAMPERING' && <FileWarning className="h-5 w-5 text-red-400" />}
+                    {threat.category === 'REPUDIATION' && <Clock className="h-5 w-5 text-yellow-400" />}
+                    {threat.category === 'INFORMATION_DISCLOSURE' && <FileX className="h-5 w-5 text-blue-400" />}
+                    {threat.category === 'DENIAL_OF_SERVICE' && <Zap className="h-5 w-5 text-orange-400" />}
+                    {threat.category === 'ELEVATION_OF_PRIVILEGE' && <UserPlus className="h-5 w-5 text-pink-400" />}
+                    {!['SPOOFING', 'TAMPERING', 'REPUDIATION', 'INFORMATION_DISCLOSURE', 'DENIAL_OF_SERVICE', 'ELEVATION_OF_PRIVILEGE'].includes(threat.category) &&
+                      <AlertTriangle className="h-5 w-5 text-text-muted" />
+                    }
+                  </div>
                 </div>
 
-                <h3 className="text-accent font-medium text-lg mb-2">{threat.description}</h3>
+                <h3 className="text-text-primary font-bold text-lg mb-3 group-hover:text-accent-DEFAULT transition-colors">{threat.description}</h3>
 
-                <div className="space-y-3 text-sm">
-                  <div>
-                    <span className="text-accent/70">Component:</span>
-                    <span className="text-accent ml-2">{threat.component}</span>
-                  </div>
+                <div className="space-y-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-primary-light/50 p-3 rounded-lg border border-highlight">
+                      <span className="text-text-muted text-xs uppercase tracking-wider block mb-1">Component</span>
+                      <span className="text-text-primary font-mono">{threat.component}</span>
+                    </div>
 
-                  <div>
-                    <span className="text-accent/70">Attack Vector:</span>
-                    <p className="text-accent mt-1">{threat.attack_vector}</p>
+                    <div className="bg-primary-light/50 p-3 rounded-lg border border-highlight">
+                      <span className="text-text-muted text-xs uppercase tracking-wider block mb-1">Attack Vector</span>
+                      <p className="text-text-primary">{threat.attack_vector}</p>
+                    </div>
                   </div>
 
                   {threat.mitre_ids && threat.mitre_ids.length > 0 && (
                     <div>
-                      <span className="text-accent/70">MITRE ATT&CK:</span>
-                      <div className="flex flex-wrap gap-2 mt-1">
+                      <span className="text-text-muted text-xs uppercase tracking-wider block mb-2">MITRE ATT&CK</span>
+                      <div className="flex flex-wrap gap-2">
                         {threat.mitre_ids.map((id) => (
                           <a
                             key={id}
                             href={`https://attack.mitre.org/techniques/${id}/`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2 py-1 bg-secondary text-accent rounded hover:bg-primary-light transition-colors shadow-sm"
+                            className="px-2 py-1 bg-primary-light text-accent-DEFAULT rounded hover:bg-accent-DEFAULT/20 transition-colors text-xs font-mono border border-highlight hover:border-accent-DEFAULT/50"
                           >
                             {id}
                           </a>
@@ -201,15 +214,15 @@ function ThreatView({ scanId }: ThreatViewProps) {
 
                   {threat.cwe_ids && threat.cwe_ids.length > 0 && (
                     <div>
-                      <span className="text-accent/70">CWE:</span>
-                      <div className="flex flex-wrap gap-2 mt-1">
+                      <span className="text-text-muted text-xs uppercase tracking-wider block mb-2">CWE</span>
+                      <div className="flex flex-wrap gap-2">
                         {threat.cwe_ids.map((cwe) => (
                           <a
                             key={cwe}
                             href={`https://cwe.mitre.org/data/definitions/${cwe.replace('CWE-', '')}.html`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2 py-1 bg-secondary text-accent rounded hover:bg-primary-light transition-colors shadow-sm"
+                            className="px-2 py-1 bg-primary-light text-text-secondary rounded hover:bg-primary-light/80 transition-colors text-xs font-mono border border-highlight"
                           >
                             {cwe}
                           </a>
@@ -218,9 +231,12 @@ function ThreatView({ scanId }: ThreatViewProps) {
                     </div>
                   )}
 
-                  <div className="pt-3 border-t border-slate-600">
-                    <span className="text-slate-400 font-medium">Mitigation:</span>
-                    <p className="text-slate-300 mt-1">{threat.mitigation}</p>
+                  <div className="pt-4 border-t border-highlight mt-4">
+                    <span className="text-accent-DEFAULT font-medium flex items-center mb-2">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Mitigation Strategy
+                    </span>
+                    <p className="text-text-secondary leading-relaxed bg-primary-light/30 p-3 rounded-lg border border-highlight/50">{threat.mitigation}</p>
                   </div>
                 </div>
               </div>
@@ -229,50 +245,53 @@ function ThreatView({ scanId }: ThreatViewProps) {
         )}
       </div>
 
-      <div className="bg-secondary-dark rounded-xl p-6 border border-secondary shadow-lg">
-        <h2 className="text-xl font-bold text-accent mb-4">STRIDE Framework</h2>
+      <div className="card p-6">
+        <h2 className="text-xl font-bold text-text-primary mb-6 flex items-center">
+          <Target className="mr-2 h-5 w-5 text-accent-DEFAULT" />
+          STRIDE Framework Reference
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-          <div className="p-4 bg-secondary/80 rounded-lg shadow-md hover:shadow-lg transition-all">
+          <div className="p-4 bg-primary-light/50 rounded-lg border border-highlight hover:border-accent-DEFAULT/30 hover:bg-primary-light transition-all group">
             <div className="flex items-center space-x-2 mb-2">
-              <Target className="h-5 w-5 text-highlight" />
-              <h3 className="font-medium text-accent">Spoofing</h3>
+              <UserX className="h-5 w-5 text-purple-400 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-text-primary group-hover:text-accent-DEFAULT transition-colors">Spoofing</h3>
             </div>
-            <p className="text-accent/70">Impersonating users or systems</p>
+            <p className="text-text-secondary text-xs leading-relaxed">Impersonating users or systems to gain unauthorized access.</p>
           </div>
-          <div className="p-4 bg-secondary/80 rounded-lg shadow-md hover:shadow-lg transition-all">
+          <div className="p-4 bg-primary-light/50 rounded-lg border border-highlight hover:border-accent-DEFAULT/30 hover:bg-primary-light transition-all group">
             <div className="flex items-center space-x-2 mb-2">
-              <Target className="h-5 w-5 text-highlight" />
-              <h3 className="font-medium text-accent">Tampering</h3>
+              <FileWarning className="h-5 w-5 text-red-400 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-text-primary group-hover:text-accent-DEFAULT transition-colors">Tampering</h3>
             </div>
-            <p className="text-accent/70">Modifying data or code</p>
+            <p className="text-text-secondary text-xs leading-relaxed">Modifying data or code to compromise integrity.</p>
           </div>
-          <div className="p-4 bg-secondary/80 rounded-lg shadow-md hover:shadow-lg transition-all">
+          <div className="p-4 bg-primary-light/50 rounded-lg border border-highlight hover:border-accent-DEFAULT/30 hover:bg-primary-light transition-all group">
             <div className="flex items-center space-x-2 mb-2">
-              <Target className="h-5 w-5 text-highlight" />
-              <h3 className="font-medium text-accent">Repudiation</h3>
+              <Clock className="h-5 w-5 text-yellow-400 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-text-primary group-hover:text-accent-DEFAULT transition-colors">Repudiation</h3>
             </div>
-            <p className="text-accent/70">Denying actions or transactions</p>
+            <p className="text-text-secondary text-xs leading-relaxed">Denying actions or transactions to avoid accountability.</p>
           </div>
-          <div className="p-4 bg-secondary/80 rounded-lg shadow-md hover:shadow-lg transition-all">
+          <div className="p-4 bg-primary-light/50 rounded-lg border border-highlight hover:border-accent-DEFAULT/30 hover:bg-primary-light transition-all group">
             <div className="flex items-center space-x-2 mb-2">
-              <Target className="h-5 w-5 text-highlight" />
-              <h3 className="font-medium text-accent">Information Disclosure</h3>
+              <FileX className="h-5 w-5 text-blue-400 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-text-primary group-hover:text-accent-DEFAULT transition-colors">Information Disclosure</h3>
             </div>
-            <p className="text-accent/70">Exposing sensitive data</p>
+            <p className="text-text-secondary text-xs leading-relaxed">Exposing sensitive data to unauthorized parties.</p>
           </div>
-          <div className="p-4 bg-secondary/80 rounded-lg shadow-md hover:shadow-lg transition-all">
+          <div className="p-4 bg-primary-light/50 rounded-lg border border-highlight hover:border-accent-DEFAULT/30 hover:bg-primary-light transition-all group">
             <div className="flex items-center space-x-2 mb-2">
-              <Target className="h-5 w-5 text-highlight" />
-              <h3 className="font-medium text-accent">Denial of Service</h3>
+              <Zap className="h-5 w-5 text-orange-400 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-text-primary group-hover:text-accent-DEFAULT transition-colors">Denial of Service</h3>
             </div>
-            <p className="text-accent/70">Disrupting system availability</p>
+            <p className="text-text-secondary text-xs leading-relaxed">Disrupting system availability to legitimate users.</p>
           </div>
-          <div className="p-4 bg-secondary/80 rounded-lg shadow-md hover:shadow-lg transition-all">
+          <div className="p-4 bg-primary-light/50 rounded-lg border border-highlight hover:border-accent-DEFAULT/30 hover:bg-primary-light transition-all group">
             <div className="flex items-center space-x-2 mb-2">
-              <Target className="h-5 w-5 text-highlight" />
-              <h3 className="font-medium text-accent">Elevation of Privilege</h3>
+              <UserPlus className="h-5 w-5 text-pink-400 group-hover:scale-110 transition-transform" />
+              <h3 className="font-bold text-text-primary group-hover:text-accent-DEFAULT transition-colors">Elevation of Privilege</h3>
             </div>
-            <p className="text-accent/70">Gaining unauthorized access</p>
+            <p className="text-text-secondary text-xs leading-relaxed">Gaining unauthorized access or higher privileges.</p>
           </div>
         </div>
       </div>

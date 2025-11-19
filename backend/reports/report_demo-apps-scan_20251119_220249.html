@@ -1,0 +1,213 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Security Scan Report - demo-apps-scan</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+                h1, h2, h3 {
+                    color: #2c3e50;
+                }
+                .header {
+                    background-color: #34495e;
+                    color: white;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    border-radius: 5px;
+                }
+                .summary {
+                    background-color: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 5px;
+                    margin-bottom: 20px;
+                }
+                .findings-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                .findings-table th, .findings-table td {
+                    border: 1px solid #ddd;
+                    padding: 12px;
+                    text-align: left;
+                }
+                .findings-table th {
+                    background-color: #f2f2f2;
+                }
+                .findings-table tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+                .severity-critical {
+                    background-color: #ffdddd;
+                }
+                .severity-high {
+                    background-color: #ffeecc;
+                }
+                .severity-medium {
+                    background-color: #ffffcc;
+                }
+                .severity-low {
+                    background-color: #e6ffe6;
+                }
+                .footer {
+                    margin-top: 30px;
+                    text-align: center;
+                    font-size: 0.8em;
+                    color: #7f8c8d;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Security Scan Report - demo-apps-scan</h1>
+                <p>Generated: 2025-11-19 22:02:49</p>
+            </div>
+            
+            <div class="summary">
+                <h2>Executive Summary</h2>
+                <p>Scan ID: demo-apps-scan</p>
+                <p>Repository: Unknown</p>
+                <p>Total Findings: 11</p>
+                <ul>
+                    <li>Critical: 0</li>
+                    <li>High: 3</li>
+                    <li>Medium: 5</li>
+                    <li>Low: 3</li>
+                </ul>
+                <p>Total Threats: 0</p>
+            </div>
+            
+            <h2>Findings</h2>
+            <table class="findings-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Severity</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>CWE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr class="severity-low">
+                        <td>BANDIT-7ec30f77</td>
+                        <td>SeverityLevel.LOW</td>
+                        <td>Consider possible security implications associated with pickle module. (Test: blacklist)</td>
+                        <td>app.py:4</td>
+                        <td>CWE-CWE-502</td>
+                    </tr>
+                    
+                    <tr class="severity-low">
+                        <td>BANDIT-ab759c41</td>
+                        <td>SeverityLevel.LOW</td>
+                        <td>Consider possible security implications associated with the subprocess module. (Test: blacklist)</td>
+                        <td>app.py:5</td>
+                        <td>CWE-CWE-78</td>
+                    </tr>
+                    
+                    <tr class="severity-low">
+                        <td>BANDIT-c10642ba</td>
+                        <td>SeverityLevel.LOW</td>
+                        <td>Possible hardcoded password: &#39;admin123&#39; (Test: hardcoded_password_string)</td>
+                        <td>app.py:11</td>
+                        <td>CWE-CWE-259</td>
+                    </tr>
+                    
+                    <tr class="severity-medium">
+                        <td>BANDIT-773fb32b</td>
+                        <td>SeverityLevel.MEDIUM</td>
+                        <td>Possible SQL injection vector through string-based query construction. (Test: hardcoded_sql_expressions)</td>
+                        <td>app.py:25</td>
+                        <td>CWE-CWE-89</td>
+                    </tr>
+                    
+                    <tr class="severity-medium">
+                        <td>BANDIT-1d4a9ae2</td>
+                        <td>SeverityLevel.MEDIUM</td>
+                        <td>Possible SQL injection vector through string-based query construction. (Test: hardcoded_sql_expressions)</td>
+                        <td>app.py:36</td>
+                        <td>CWE-CWE-89</td>
+                    </tr>
+                    
+                    <tr class="severity-high">
+                        <td>BANDIT-e046dcec</td>
+                        <td>SeverityLevel.HIGH</td>
+                        <td>Starting a process with a shell, possible injection detected, security issue. (Test: start_process_with_a_shell)</td>
+                        <td>app.py:45</td>
+                        <td>CWE-CWE-78</td>
+                    </tr>
+                    
+                    <tr class="severity-high">
+                        <td>BANDIT-30c14206</td>
+                        <td>SeverityLevel.HIGH</td>
+                        <td>subprocess call with shell=True identified, security issue. (Test: subprocess_popen_with_shell_equals_true)</td>
+                        <td>app.py:51</td>
+                        <td>CWE-CWE-78</td>
+                    </tr>
+                    
+                    <tr class="severity-medium">
+                        <td>BANDIT-ff4459d6</td>
+                        <td>SeverityLevel.MEDIUM</td>
+                        <td>Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue. (Test: blacklist)</td>
+                        <td>app.py:57</td>
+                        <td>CWE-CWE-502</td>
+                    </tr>
+                    
+                    <tr class="severity-medium">
+                        <td>BANDIT-e650d554</td>
+                        <td>SeverityLevel.MEDIUM</td>
+                        <td>Use of possibly insecure function - consider using safer ast.literal_eval. (Test: blacklist)</td>
+                        <td>app.py:69</td>
+                        <td>CWE-CWE-78</td>
+                    </tr>
+                    
+                    <tr class="severity-high">
+                        <td>BANDIT-6f6981b0</td>
+                        <td>SeverityLevel.HIGH</td>
+                        <td>A Flask app appears to be run with debug=True, which exposes the Werkzeug debugger and allows the execution of arbitrary code. (Test: flask_debug_true)</td>
+                        <td>app.py:82</td>
+                        <td>CWE-CWE-94</td>
+                    </tr>
+                    
+                    <tr class="severity-medium">
+                        <td>BANDIT-a9f38080</td>
+                        <td>SeverityLevel.MEDIUM</td>
+                        <td>Possible binding to all interfaces. (Test: hardcoded_bind_all_interfaces)</td>
+                        <td>app.py:82</td>
+                        <td>CWE-CWE-605</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+            
+            <h2>Threats</h2>
+            <table class="findings-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Component</th>
+                        <th>Attack Vector</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <p>Generated by AutoThreatMap v1.0.0</p>
+            </div>
+        </body>
+        </html>
+        

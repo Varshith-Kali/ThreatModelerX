@@ -24,16 +24,16 @@ def test_module_import(module_path, class_name):
         
         # Check if the class exists in the module
         if hasattr(module, class_name):
-            print(f"✅ {class_name} module imported successfully")
+            print(f"[PASS] {class_name} module imported successfully")
             return True, module
         else:
-            print(f"❌ {class_name} class not found in module")
+            print(f"[FAIL] {class_name} class not found in module")
             return False, None
     except ImportError as e:
-        print(f"❌ {class_name} test failed: {str(e)}")
+        print(f"[FAIL] {class_name} test failed: {str(e)}")
         return False, None
     except Exception as e:
-        print(f"❌ {class_name} test failed with unexpected error: {str(e)}")
+        print(f"[FAIL] {class_name} test failed with unexpected error: {str(e)}")
         return False, None
 
 def test_email_notifier():
@@ -51,10 +51,10 @@ def test_email_notifier():
             smtp_password="test",
             sender_email="test@example.com"
         )
-        print("✅ Email Notifier instance created successfully")
+        print("[PASS] Email Notifier instance created successfully")
         return True
     except Exception as e:
-        print(f"❌ Email Notifier instantiation failed: {str(e)}")
+        print(f"[FAIL] Email Notifier instantiation failed: {str(e)}")
         return False
 
 def mock_pdfkit():
@@ -63,7 +63,7 @@ def mock_pdfkit():
         import pdfkit
         return True
     except ImportError:
-        print("⚠️ pdfkit not available, using mock implementation")
+        print("[WARN] pdfkit not available, using mock implementation")
         import sys
         class MockPdfKit:
             @staticmethod
@@ -82,7 +82,7 @@ def mock_aiohttp():
         import aiohttp
         return True
     except ImportError:
-        print("⚠️ aiohttp not available, using mock implementation")
+        print("[WARN] aiohttp not available, using mock implementation")
         import sys
         class MockClientSession:
             async def __aenter__(self):
@@ -130,7 +130,7 @@ def test_report_generator():
         mock_pdfkit()
         
         from app.workers.report_generator import ReportGenerator
-        print("✅ Report Generator module imported successfully")
+        print("[PASS] Report Generator module imported successfully")
         
         # Create a simple test template directory
         os.makedirs("temp/templates", exist_ok=True)
@@ -139,7 +139,7 @@ def test_report_generator():
         
         # Create an instance with test parameters
         generator = ReportGenerator(templates_dir="temp/templates")
-        print("✅ Report Generator instance created successfully")
+        print("[PASS] Report Generator instance created successfully")
         
         # Clean up
         os.remove("temp/templates/report.html")
@@ -147,7 +147,7 @@ def test_report_generator():
         os.rmdir("temp")
         return True
     except Exception as e:
-        print(f"❌ Report Generator test failed: {str(e)}")
+        print(f"[FAIL] Report Generator test failed: {str(e)}")
         # Clean up in case of failure
         if os.path.exists("temp/templates/report.html"):
             os.remove("temp/templates/report.html")
@@ -176,13 +176,13 @@ def test_model_updates():
             hasattr(scan_request, "notification_email") and
             hasattr(scan_request, "include_dast") and
             hasattr(scan_request, "email_notification")):
-            print("✅ ScanRequest model has been updated with new fields")
+            print("[PASS] ScanRequest model has been updated with new fields")
             return True
         else:
-            print("❌ ScanRequest model is missing required fields")
+            print("[FAIL] ScanRequest model is missing required fields")
             return False
     except Exception as e:
-        print(f"❌ Model updates test failed: {str(e)}")
+        print(f"[FAIL] Model updates test failed: {str(e)}")
         return False
 
 def test_zap_runner():
@@ -195,7 +195,7 @@ def test_zap_runner():
         try:
             import zapv2
         except ImportError:
-            print("⚠️ zapv2 not available, using mock implementation")
+            print("[WARN] zapv2 not available, using mock implementation")
             import sys
             
             class MockZAPv2:
@@ -224,42 +224,42 @@ def test_zap_runner():
             sys.modules['zapv2'] = MockZAPv2
         
         from app.scanner.zap_runner import ZapRunner
-        print("✅ ZAP Runner module imported successfully")
+        print("[PASS] ZAP Runner module imported successfully")
         
         # Create an instance with test parameters
         runner = ZapRunner(zap_api_url="http://localhost:8080", api_key="test_key")
-        print("✅ ZAP Runner instance created successfully")
+        print("[PASS] ZAP Runner instance created successfully")
         return True
     except Exception as e:
-        print(f"❌ ZAP Runner test failed: {str(e)}")
+        print(f"[FAIL] ZAP Runner test failed: {str(e)}")
         return False
 
 def test_spotbugs_runner():
     """Test SpotBugsRunner functionality"""
     try:
         from app.scanner.spotbugs_runner import SpotBugsRunner
-        print("✅ SpotBugs Runner module imported successfully")
+        print("[PASS] SpotBugs Runner module imported successfully")
         
         # Create an instance with test parameters
         runner = SpotBugsRunner(spotbugs_path="/usr/local/bin/spotbugs")
-        print("✅ SpotBugs Runner instance created successfully")
+        print("[PASS] SpotBugs Runner instance created successfully")
         return True
     except Exception as e:
-        print(f"❌ SpotBugs Runner test failed: {str(e)}")
+        print(f"[FAIL] SpotBugs Runner test failed: {str(e)}")
         return False
 
 def test_gosec_runner():
     """Test GosecRunner functionality"""
     try:
         from app.scanner.gosec_runner import GosecRunner
-        print("✅ Gosec Runner module imported successfully")
+        print("[PASS] Gosec Runner module imported successfully")
         
         # Create an instance with test parameters
         runner = GosecRunner(gosec_path="/usr/local/bin/gosec")
-        print("✅ Gosec Runner instance created successfully")
+        print("[PASS] Gosec Runner instance created successfully")
         return True
     except Exception as e:
-        print(f"❌ Gosec Runner test failed: {str(e)}")
+        print(f"[FAIL] Gosec Runner test failed: {str(e)}")
         return False
 
 def test_demo_apps():
@@ -268,29 +268,29 @@ def test_demo_apps():
         # Check if demo apps exist
         demo_path = Path(__file__).parent / "demo-apps"
         if not demo_path.exists():
-            print("❌ Demo apps directory not found")
+            print("[FAIL] Demo apps directory not found")
             return False
         
         # Check Python Flask demo
         flask_demo = demo_path / "python-flask"
         if flask_demo.exists() and (flask_demo / "app.py").exists():
-            print("✅ Python Flask demo app found")
+            print("[PASS] Python Flask demo app found")
         else:
-            print("❌ Python Flask demo app not found")
+            print("[FAIL] Python Flask demo app not found")
             return False
         
         # Check Node Express demo
         node_demo = demo_path / "node-express"
         if node_demo.exists() and (node_demo / "app.js").exists():
-            print("✅ Node Express demo app found")
+            print("[PASS] Node Express demo app found")
         else:
-            print("❌ Node Express demo app not found")
+            print("[FAIL] Node Express demo app not found")
             return False
         
-        print("✅ Demo apps verified successfully")
+        print("[PASS] Demo apps verified successfully")
         return True
     except Exception as e:
-        print(f"❌ Demo apps test failed: {str(e)}")
+        print(f"[FAIL] Demo apps test failed: {str(e)}")
         return False
 
 def main():
@@ -319,9 +319,9 @@ def main():
             all_passed = False
     
     if all_passed:
-        print("\n✅ All tests passed!")
+        print("\n[PASS] All tests passed!")
     else:
-        print("\n❌ Some tests failed. Please check the logs above.")
+        print("\n[FAIL] Some tests failed. Please check the logs above.")
     
     return 0 if all_passed else 1
 

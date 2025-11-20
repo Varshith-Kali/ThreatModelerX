@@ -4,7 +4,6 @@
 
 ThreatModelerX is a production-ready, open-source security automation platform that integrates SAST (Static Application Security Testing), threat modeling, and risk prioritization to automatically identify, map, and remediate application security risks across multiple programming languages.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Node](https://img.shields.io/badge/node-18+-green.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
@@ -452,28 +451,6 @@ ls demo-apps/node-express/app.js
 
 ---
 
-## 🚀 Roadmap
-
-### Short-term (1-2 weeks)
-- [ ] DAST integration with OWASP ZAP
-- [ ] Additional language support (Java, Go)
-- [ ] Enhanced PDF report generation
-- [ ] Slack/Teams notifications
-
-### Medium-term (1-2 months)
-- [ ] False positive ML classifier
-- [ ] Auto-remediation PRs for simple issues
-- [ ] Team dashboards and SLA tracking
-- [ ] Dependency graph visualization
-
-### Long-term (3-6 months)
-- [ ] ML-based vulnerability detection
-- [ ] Kubernetes-based scanner farm
-- [ ] Custom policy engine
-- [ ] Interactive security training labs
-
----
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
@@ -484,11 +461,6 @@ Contributions are welcome! Please:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
----
-
-## 📄 License
-
-MIT License - see LICENSE file for details
 
 ---
 
@@ -505,7 +477,6 @@ MIT License - see LICENSE file for details
 
 - **GitHub Issues**: Report bugs or request features
 - **Documentation**: See `/docs` folder for detailed guides
-- **Email**: [Your email for support]
 
 ---
 

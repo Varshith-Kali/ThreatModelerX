@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Comprehensive test script for AutoThreatMap
 Tests all scanners, report generation, and email notifications
@@ -13,14 +12,12 @@ import requests
 import logging
 from pathlib import Path
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("autothreatmap.test")
 
-# Default settings
 DEFAULT_API_URL = "http://localhost:8000"
 DEMO_APPS = {
     "python": "./demo-apps/python-flask",
@@ -125,7 +122,6 @@ def test_dast_scanner(api_url, repo_path, target_url, email=None):
     """Test DAST scanner (OWASP ZAP)"""
     logger.info(f"Testing DAST scanner on {target_url}")
     
-    # Prepare scan request
     scan_request = {
         "repo_path": os.path.abspath(repo_path),
         "scan_id": f"test-dast-{int(time.time())}",
@@ -135,7 +131,6 @@ def test_dast_scanner(api_url, repo_path, target_url, email=None):
         "notification_email": email
     }
     
-    # Start scan
     try:
         response = requests.post(f"{api_url}/scan", json=scan_request)
         if response.status_code != 200:
@@ -145,12 +140,10 @@ def test_dast_scanner(api_url, repo_path, target_url, email=None):
         scan_id = response.json().get("scan_id")
         logger.info(f"Started DAST scan with ID: {scan_id}")
         
-        # Wait for scan completion
         scan_result = wait_for_scan_completion(api_url, scan_id)
         if not scan_result:
             return False
             
-        # Verify findings
         findings = scan_result.get("findings", [])
         zap_findings = [f for f in findings if f.get("tool") == "ZAP"]
         logger.info(f"Found {len(zap_findings)} issues in DAST scan")
@@ -211,7 +204,6 @@ def test_report_generation(api_url, repo_path, report_format, email=None):
     """Test report generation"""
     logger.info(f"Testing {report_format} report generation")
     
-    # Prepare scan request
     scan_request = {
         "repo_path": os.path.abspath(repo_path),
         "scan_id": f"test-report-{int(time.time())}",
@@ -220,7 +212,6 @@ def test_report_generation(api_url, repo_path, report_format, email=None):
         "notification_email": email
     }
     
-    # Start scan
     try:
         response = requests.post(f"{api_url}/scan", json=scan_request)
         if response.status_code != 200:
@@ -230,18 +221,15 @@ def test_report_generation(api_url, repo_path, report_format, email=None):
         scan_id = response.json().get("scan_id")
         logger.info(f"Started scan with ID: {scan_id}")
         
-        # Wait for scan completion
         scan_result = wait_for_scan_completion(api_url, scan_id)
         if not scan_result:
             return False
             
-        # Check for report path
         report_path = scan_result.get("report_path")
         if report_path:
             logger.info(f"Report generated at: {report_path}")
             return True
         else:
-            # Try to export report explicitly
             response = requests.post(
                 f"{api_url}/api/export/{scan_id}",
                 params={"export_format": report_format, "email": email}
@@ -303,7 +291,6 @@ def run_all_tests(args):
     """Run all tests"""
     results = {}
     
-    # Test SAST scanners
     if args.test_all or args.test_sast:
         results["sast"] = test_sast_scanners(
             args.api_url, 
@@ -311,7 +298,6 @@ def run_all_tests(args):
             args.email
         )
     
-    # Test DAST scanner
     if args.test_all or args.test_dast:
         results["dast"] = test_dast_scanner(
             args.api_url, 
@@ -320,7 +306,6 @@ def run_all_tests(args):
             args.email
         )
     
-    # Test Java scanner
     if (args.test_all or args.test_java) and "java" in DEMO_APPS:
         results["java"] = test_language_scanner(
             args.api_url, 
@@ -329,7 +314,6 @@ def run_all_tests(args):
             args.email
         )
     
-    # Test Go scanner
     if (args.test_all or args.test_go) and "go" in DEMO_APPS:
         results["go"] = test_language_scanner(
             args.api_url, 
@@ -338,7 +322,6 @@ def run_all_tests(args):
             args.email
         )
     
-    # Test report generation
     if args.test_all or args.test_reports:
         results["reports"] = test_report_generation(
             args.api_url, 
@@ -347,7 +330,6 @@ def run_all_tests(args):
             args.email
         )
     
-    # Test email notifications
     if (args.test_all or args.test_email) and args.email:
         results["email"] = test_email_notification(
             args.api_url, 

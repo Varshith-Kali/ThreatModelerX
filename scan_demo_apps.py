@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Script to scan demo applications for vulnerabilities using ThreatModelerX
 """
@@ -7,7 +6,6 @@ import sys
 import json
 from pathlib import Path
 
-# Add the backend directory to the path so we can import modules
 sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))
 
 try:
@@ -74,14 +72,12 @@ def scan_node_express_app():
     
     findings = []
     
-    # Run Semgrep
     print("[INFO] Running Semgrep...")
     semgrep = SemgrepRunner()
     semgrep_findings = semgrep.run(express_app_path)
     print(f"[INFO] Semgrep found {len(semgrep_findings)} issues")
     findings.extend(semgrep_findings)
     
-    # Run Retire.js
     print("[INFO] Running Retire.js...")
     retire = RetireRunner()
     retire_findings = retire.run(express_app_path)
@@ -90,7 +86,6 @@ def scan_node_express_app():
     
     print(f"[INFO] Found {len(findings)} potential vulnerabilities")
     
-    # Convert findings to dict for report
     findings_dict = [f.model_dump() for f in findings]
     
     return {
@@ -176,17 +171,14 @@ def main():
     
     scan_results = []
     
-    # Scan Python Flask app
     flask_results = scan_python_flask_app()
     if flask_results:
         scan_results.append(flask_results)
     
-    # Scan Node Express app
     express_results = scan_node_express_app()
     if express_results:
         scan_results.append(express_results)
     
-    # Generate comprehensive report
     report_path = generate_vulnerability_report(scan_results)
     
     print("\n=== Scan Summary ===")

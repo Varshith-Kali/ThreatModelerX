@@ -16,14 +16,12 @@ class BanditRunner:
         findings = []
 
         try:
-            # Check if bandit is installed
             try:
                 subprocess.run(["bandit", "--version"], capture_output=True, check=False)
             except FileNotFoundError:
                 self.logger.warning("Bandit not found. Using mock data for demonstration.")
                 return self._generate_mock_findings(repo_path)
                 
-            # Set environment variables to force UTF-8 encoding
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
             env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
@@ -40,27 +38,22 @@ class BanditRunner:
             )
 
             if result.returncode in [0, 1]:
-                # Bandit returns 1 when issues are found
                 try:
                     data = json.loads(result.stdout)
                     findings = self._parse_results(data, repo_path)
                     self.logger.info(f"Bandit found {len(findings)} issues in {repo_path}")
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to parse Bandit JSON output: {e}")
-                    # Fall back to mock findings if parsing fails
                     return self._generate_mock_findings(repo_path)
             else:
                 self.logger.warning(f"Bandit returned non-standard exit code: {result.returncode}")
-                # Fall back to mock findings
                 return self._generate_mock_findings(repo_path)
                 
         except subprocess.TimeoutExpired:
             self.logger.warning(f"Bandit scan timed out for {repo_path}")
-            # Fall back to mock findings on timeout
             return self._generate_mock_findings(repo_path)
         except Exception as e:
             self.logger.error(f"Error running bandit: {e}")
-            # Fall back to mock findings on any error
             return self._generate_mock_findings(repo_path)
 
         return findings

@@ -85,7 +85,6 @@ class ArchitectureAnalyzer:
         if file_ext in ['.py', '.js', '.ts']:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
-                # Look for API route patterns
                 return bool(re.search(r'@app\.(get|post|put|delete|patch)', content) or
                            re.search(r'router\.(get|post|put|delete|patch)', content) or
                            re.search(r'app\.(get|post|put|delete|patch)\(', content))
@@ -163,7 +162,6 @@ class ArchitectureAnalyzer:
                 with open(os.path.join(os.getcwd(), file_path), 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
                     
-                    # Look for imports and references to other components
                     for other_file, other_id in component_files.items():
                         if other_file != file_path and Path(other_file).stem in content:
                             self.relationships.append({

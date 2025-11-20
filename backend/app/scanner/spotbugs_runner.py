@@ -37,22 +37,18 @@ class SpotBugsRunner:
         repo_path = scan_request.repo_path
         logger.info(f"Starting SpotBugs scan on {repo_path}")
         
-        # Check if repo contains Java code
         if not self._has_java_code(repo_path):
             logger.info(f"No Java code found in {repo_path}")
             return []
             
         try:
-            # Step 1: Compile Java code if needed
             self._compile_java_code(repo_path)
             
-            # Step 2: Run SpotBugs
             xml_output = self._run_spotbugs(repo_path)
             if not xml_output:
                 logger.warning("SpotBugs scan produced no output")
                 return []
                 
-            # Step 3: Parse results
             findings = self._parse_results(xml_output, repo_path)
             
             logger.info(f"SpotBugs scan completed with {len(findings)} findings")
@@ -78,7 +74,6 @@ class SpotBugsRunner:
     
     def _compile_java_code(self, repo_path: str) -> None:
         """Compile Java code if needed"""
-        # Check for Maven project
         if os.path.exists(os.path.join(repo_path, "pom.xml")):
             logger.info("Maven project detected, compiling with mvn")
             try:
@@ -91,7 +86,6 @@ class SpotBugsRunner:
             except Exception as e:
                 logger.error(f"Error compiling Maven project: {str(e)}")
                 
-        # Check for Gradle project
         if os.path.exists(os.path.join(repo_path, "build.gradle")):
             logger.info("Gradle project detected, compiling with gradle")
             try:
@@ -104,7 +98,6 @@ class SpotBugsRunner:
             except Exception as e:
                 logger.error(f"Error compiling Gradle project: {str(e)}")
                 
-        # Fallback to javac for simple projects
         logger.info("No build system detected, attempting direct compilation")
         try:
             java_files = subprocess.run(
@@ -204,20 +197,16 @@ class SpotBugsRunner:
         try:
             root = ET.fromstring(xml_output)
             
-            # Get project name
             project_name = root.get("project", "Unknown")
             
-            # Process each bug instance
             for bug_instance in root.findall(".//BugInstance"):
                 bug_type = bug_instance.get("type", "")
                 category = bug_instance.get("category", "")
                 priority = int(bug_instance.get("priority", "3"))
                 
-                # Skip non-security bugs
                 if category != "SECURITY" and not self._is_security_bug(bug_type):
                     continue
                 
-                # Get source line info
                 source_line = bug_instance.find(".//SourceLine")
                 if source_line is None:
                     continue
@@ -226,26 +215,20 @@ class SpotBugsRunner:
                 start_line = int(source_line.get("start", "0"))
                 end_line = int(source_line.get("end", "0"))
                 
-                # Get class info
                 class_element = bug_instance.find(".//Class")
                 class_name = class_element.get("classname", "") if class_element is not None else ""
                 
-                # Get method info
                 method_element = bug_instance.find(".//Method")
                 method_name = method_element.get("name", "") if method_element is not None else ""
                 
-                # Get bug description
                 bug_annotation = bug_instance.find(".//BugPattern")
                 description = bug_annotation.get("shortDescription", "") if bug_annotation is not None else ""
                 details = bug_annotation.text if bug_annotation is not None and bug_annotation.text else ""
                 
-                # Map priority to severity
                 severity = self._map_priority_to_severity(priority)
                 
-                # Map to CWE if possible
                 cwe_id = self._map_bug_to_cwe(bug_type)
                 
-                # Create finding
                 finding = Finding(
                     id=f"SPOTBUGS-{bug_type}-{hash(file_path + str(start_line))}",
                     tool="SpotBugs",
@@ -281,7 +264,7 @@ class SpotBugsRunner:
     def _map_priority_to_severity(self, priority: int) -> SeverityLevel:
         """Map SpotBugs priority to severity level"""
         priority_map = {
-            1: SeverityLevel.CRITICAL,  # High priority
+            1: SeverityLevel.CRITICAL,
             2: SeverityLevel.HIGH,
             3: SeverityLevel.MEDIUM,
             4: SeverityLevel.LOW,

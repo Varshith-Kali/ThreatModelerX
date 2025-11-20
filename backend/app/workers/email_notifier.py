@@ -56,7 +56,6 @@ class EmailNotifier:
             logger.info("Email notification not requested or no email provided")
             return False
             
-        # Filter critical and high severity findings
         critical_findings = [f for f in findings if f.severity in [SeverityLevel.CRITICAL, SeverityLevel.HIGH]]
         
         if not critical_findings:
@@ -64,11 +63,9 @@ class EmailNotifier:
             return False
             
         try:
-            # Create email content
             subject = f"[SECURITY ALERT] Critical findings in scan {scan_request.scan_id}"
             html_content = self._create_email_content(scan_request, critical_findings)
             
-            # Send email
             return self._send_email(scan_request.notification_email, subject, html_content)
             
         except Exception as e:
@@ -81,18 +78,18 @@ class EmailNotifier:
         <html>
         <head>
             <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color:
                 .container {{ max-width: 800px; margin: 0 auto; padding: 20px; }}
-                h1 {{ color: #d9534f; }}
-                h2 {{ color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }}
-                .finding {{ margin-bottom: 20px; padding: 15px; border-left: 4px solid #d9534f; background-color: #f9f9f9; }}
-                .critical {{ border-left-color: #d9534f; }}
-                .high {{ border-left-color: #f0ad4e; }}
+                h1 {{ color:
+                h2 {{ color:
+                .finding {{ margin-bottom: 20px; padding: 15px; border-left: 4px solid
+                .critical {{ border-left-color:
+                .high {{ border-left-color:
                 .severity {{ font-weight: bold; }}
-                .critical-text {{ color: #d9534f; }}
-                .high-text {{ color: #f0ad4e; }}
+                .critical-text {{ color:
+                .high-text {{ color:
                 .details {{ margin-top: 10px; }}
-                .footer {{ margin-top: 30px; font-size: 12px; color: #777; }}
+                .footer {{ margin-top: 30px; font-size: 12px; color:
             </style>
         </head>
         <body>
@@ -150,17 +147,14 @@ class EmailNotifier:
             return False
             
         try:
-            # Create message
             message = MIMEMultipart("alternative")
             message["Subject"] = subject
             message["From"] = self.sender_email
             message["To"] = recipient_email
             
-            # Add HTML content
             html_part = MIMEText(html_content, "html")
             message.attach(html_part)
             
-            # Connect to SMTP server
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 if self.use_tls:
                     server.starttls()

@@ -38,23 +38,18 @@ class ZapRunner:
         logger.info(f"Starting ZAP scan against {scan_request.target_url}")
         
         try:
-            # Step 1: Spider the target to discover endpoints
             spider_id = await self._start_spider(scan_request.target_url)
             if not spider_id:
                 return []
                 
-            # Step 2: Wait for spider to complete
             await self._wait_for_spider_completion(spider_id)
             
-            # Step 3: Start active scan
             scan_id = await self._start_active_scan(scan_request.target_url)
             if not scan_id:
                 return []
                 
-            # Step 4: Wait for active scan to complete
             await self._wait_for_scan_completion(scan_id)
             
-            # Step 5: Retrieve scan results
             findings = await self._get_scan_results()
             
             logger.info(f"ZAP scan completed with {len(findings)} findings")
@@ -109,7 +104,7 @@ class ZapRunner:
             except Exception as e:
                 logger.error(f"Error checking spider status: {str(e)}")
                 
-            await asyncio.sleep(5)  # Check every 5 seconds
+            await asyncio.sleep(5)
             
         logger.warning("Spider timed out")
         return False
@@ -160,7 +155,7 @@ class ZapRunner:
             except Exception as e:
                 logger.error(f"Error checking scan status: {str(e)}")
                 
-            await asyncio.sleep(10)  # Check every 10 seconds
+            await asyncio.sleep(10)
             
         logger.warning("Active scan timed out")
         return False

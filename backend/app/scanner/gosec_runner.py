@@ -36,19 +36,16 @@ class GosecRunner:
         repo_path = scan_request.repo_path
         logger.info(f"Starting Gosec scan on {repo_path}")
         
-        # Check if repo contains Go code
         if not self._has_go_code(repo_path):
             logger.info(f"No Go code found in {repo_path}")
             return []
             
         try:
-            # Run Gosec
             json_output = self._run_gosec(repo_path)
             if not json_output:
                 logger.warning("Gosec scan produced no output")
                 return []
                 
-            # Parse results
             findings = self._parse_results(json_output, repo_path)
             
             logger.info(f"Gosec scan completed with {len(findings)} findings")
@@ -78,7 +75,6 @@ class GosecRunner:
             output_file = tmp.name
             
         try:
-            # Run Gosec with JSON output
             gosec_cmd = [
                 self.gosec_path,
                 "-fmt=json",
@@ -96,12 +92,9 @@ class GosecRunner:
                 check=False
             )
             
-            # Check for errors
             if process.returncode != 0 and process.returncode != 1:
-                # Return code 1 is normal when issues are found
                 logger.error(f"Gosec error: {process.stderr}")
                 
-            # Read output file
             if os.path.exists(output_file) and os.path.getsize(output_file) > 0:
                 with open(output_file, "r") as f:
                     return f.read()
@@ -113,7 +106,6 @@ class GosecRunner:
             logger.error(f"Error running Gosec: {str(e)}")
             return None
         finally:
-            # Clean up temp file
             if os.path.exists(output_file):
                 os.unlink(output_file)
     

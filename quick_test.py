@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Quick test script for ThreatModelerX enhancements
 """
@@ -8,7 +7,6 @@ import importlib.util
 import json
 from pathlib import Path
 
-# Add backend directory to path
 sys.path.append(str(Path(__file__).parent / "backend"))
 
 def test_module_import(module_path, class_name):
@@ -43,7 +41,6 @@ def test_email_notifier():
         return False
     
     try:
-        # Create an instance with test parameters
         notifier = module.EmailNotifier(
             smtp_server="test.example.com",
             smtp_port=587,
@@ -162,7 +159,6 @@ def test_model_updates():
     try:
         from app.models import ScanRequest
         
-        # Create a test instance with all required fields
         scan_request = ScanRequest(
             repo_path="test_repo",
             target_url="https://example.com",
@@ -171,7 +167,6 @@ def test_model_updates():
             notification_email="test@example.com"
         )
         
-        # Check if fields exist and have correct values
         if (hasattr(scan_request, "target_url") and 
             hasattr(scan_request, "notification_email") and
             hasattr(scan_request, "include_dast") and
@@ -240,7 +235,6 @@ def test_spotbugs_runner():
         from app.scanner.spotbugs_runner import SpotBugsRunner
         print("[PASS] SpotBugs Runner module imported successfully")
         
-        # Create an instance with test parameters
         runner = SpotBugsRunner(spotbugs_path="/usr/local/bin/spotbugs")
         print("[PASS] SpotBugs Runner instance created successfully")
         return True
@@ -265,13 +259,11 @@ def test_gosec_runner():
 def test_demo_apps():
     """Test demo applications for vulnerabilities"""
     try:
-        # Check if demo apps exist
         demo_path = Path(__file__).parent / "demo-apps"
         if not demo_path.exists():
             print("[FAIL] Demo apps directory not found")
             return False
         
-        # Check Python Flask demo
         flask_demo = demo_path / "python-flask"
         if flask_demo.exists() and (flask_demo / "app.py").exists():
             print("[PASS] Python Flask demo app found")
@@ -279,7 +271,6 @@ def test_demo_apps():
             print("[FAIL] Python Flask demo app not found")
             return False
         
-        # Check Node Express demo
         node_demo = demo_path / "node-express"
         if node_demo.exists() and (node_demo / "app.js").exists():
             print("[PASS] Node Express demo app found")

@@ -16,23 +16,20 @@ class RetireRunner:
         findings = []
 
         try:
-            # Check if retire is installed
             try:
                 subprocess.run(["retire", "--version"], capture_output=True, check=False)
             except FileNotFoundError:
                 self.logger.warning("Retire.js not found. Using mock data for demonstration.")
                 return self._generate_mock_findings(repo_path)
                 
-            # Set environment variables to force UTF-8 encoding
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
             env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
 
-            # Run retire with stderr suppressed to avoid Windows console encoding issues
             result = subprocess.run(
                 ["retire", "--path", repo_path, "--outputformat", "json"],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,  # Suppress stderr to avoid console encoding errors
+                stderr=subprocess.DEVNULL,
                 text=True,
                 timeout=300,
                 env=env,
@@ -41,7 +38,6 @@ class RetireRunner:
             )
 
             if result.returncode in [0, 13]:
-                # Retire returns 13 when vulnerabilities are found
                 try:
                     if result.stdout.strip():
                         data = json.loads(result.stdout)
@@ -51,18 +47,15 @@ class RetireRunner:
                         self.logger.info(f"Retire.js found no issues in {repo_path}")
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to parse Retire.js JSON output: {e}")
-                    # Fall back to mock findings if parsing fails
                     return self._generate_mock_findings(repo_path)
             else:
                 self.logger.warning(f"Retire.js returned non-standard exit code: {result.returncode}")
-                # Fall back to mock findings
                 return self._generate_mock_findings(repo_path)
                 
         except subprocess.TimeoutExpired:
             self.logger.warning(f"Retire.js scan timed out for {repo_path}")
         except Exception as e:
             self.logger.error(f"Error running retire: {e}")
-            # Fall back to mock findings on any error
             return self._generate_mock_findings(repo_path)
 
         return findings

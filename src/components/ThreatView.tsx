@@ -22,7 +22,7 @@ function ThreatView({ scanId }: ThreatViewProps) {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const API_BASE = 'http://localhost:8000';
+  const API_BASE = 'http:
 
   useEffect(() => {
     fetchThreats();
@@ -200,7 +200,7 @@ function ThreatView({ scanId }: ThreatViewProps) {
                         {threat.mitre_ids.map((id) => (
                           <a
                             key={id}
-                            href={`https://attack.mitre.org/techniques/${id}/`}
+                            href={`https:
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2 py-1 bg-primary-light text-accent-DEFAULT rounded hover:bg-accent-DEFAULT/20 transition-colors text-xs font-mono border border-highlight hover:border-accent-DEFAULT/50"
@@ -219,7 +219,7 @@ function ThreatView({ scanId }: ThreatViewProps) {
                         {threat.cwe_ids.map((cwe) => (
                           <a
                             key={cwe}
-                            href={`https://cwe.mitre.org/data/definitions/${cwe.replace('CWE-', '')}.html`}
+                            href={`https:
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2 py-1 bg-primary-light text-text-secondary rounded hover:bg-primary-light/80 transition-colors text-xs font-mono border border-highlight"

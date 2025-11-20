@@ -30,7 +30,7 @@ function Dashboard({ onViewScan }: DashboardProps) {
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = 'http://localhost:8000';
+  const API_BASE = 'http:
 
   useEffect(() => {
     fetchData();

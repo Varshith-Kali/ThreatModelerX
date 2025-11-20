@@ -16,23 +16,20 @@ class SemgrepRunner:
         findings = []
 
         try:
-            # Check if semgrep is installed
             try:
                 subprocess.run(["semgrep", "--version"], capture_output=True, check=False)
             except FileNotFoundError:
                 self.logger.warning("Semgrep not found. Using mock data for demonstration.")
                 return self._generate_mock_findings(repo_path)
                 
-            # Set environment variables to force UTF-8 encoding
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
             env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
 
-            # Run semgrep with stderr suppressed to avoid Windows console encoding issues
             result = subprocess.run(
                 ["semgrep", "--config=auto", "--json", "--quiet", repo_path],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,  # Suppress stderr to avoid console encoding errors
+                stderr=subprocess.DEVNULL,
                 text=True,
                 timeout=300,
                 env=env,
@@ -41,25 +38,21 @@ class SemgrepRunner:
             )
 
             if result.returncode in [0, 1]:
-                # Semgrep returns 0 for no findings, 1 for findings found
                 try:
                     data = json.loads(result.stdout)
                     findings = self._parse_results(data, repo_path)
                     self.logger.info(f"Semgrep found {len(findings)} issues in {repo_path}")
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to parse Semgrep JSON output: {e}")
-                    # Fall back to mock findings if parsing fails
                     return self._generate_mock_findings(repo_path)
             else:
                 self.logger.warning(f"Semgrep returned non-standard exit code: {result.returncode}")
-                # Fall back to mock findings
                 return self._generate_mock_findings(repo_path)
                 
         except subprocess.TimeoutExpired:
             self.logger.warning(f"Semgrep scan timed out for {repo_path}")
         except Exception as e:
             self.logger.error(f"Error running semgrep: {e}")
-            # Fall back to mock findings on any error
             return self._generate_mock_findings(repo_path)
 
         return findings

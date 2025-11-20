@@ -17,7 +17,7 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
 
   const [showLogs, setShowLogs] = useState(false);
 
-  const API_BASE = 'http://localhost:8000';
+  const API_BASE = 'http:
 
   const demoApps = [
     { value: './demo-apps/python-flask', label: 'Python Flask', icon: <Coffee className="h-5 w-5 text-yellow-400" />, description: 'Vulnerable Python web application' },
@@ -36,14 +36,12 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
     setScanning(true);
     setProgress(0);
     setStatus('Initiating scan...');
-    setScanId(null); // Reset scan ID when starting a new scan
+    setScanId(null);
 
     try {
       console.log("Starting scan with path:", repoPath);
-      // Just use the path as is - backend will handle resolution
       let finalPath = repoPath;
 
-      // Use the /api/scan endpoint
       const response = await fetch(`${API_BASE}/api/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,7 +69,7 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
 
       setScanId(data.scan_id);
       setStatus('Scan running...');
-      setProgress(5); // Show initial progress
+      setProgress(5);
 
       pollScanStatus(data.scan_id);
     } catch (error: any) {
@@ -83,8 +81,8 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
 
   const pollScanStatus = async (id: string) => {
     let retryCount = 0;
-    const maxRetries = 30; // Increased retries for longer scans
-    const retryDelay = 2000; // 2 seconds between polls
+    const maxRetries = 30;
+    const retryDelay = 2000;
 
     const interval = setInterval(async () => {
       try {
@@ -102,7 +100,7 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
           return;
         }
 
-        retryCount = 0; // Reset retry count on successful response
+        retryCount = 0;
         const data = await response.json();
 
         if (data.status === 'error' || data.status === 'not_found') {
@@ -126,25 +124,20 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
           setStatus(`Scan failed: ${data.error || 'Unknown error'}`);
           setScanning(false);
         } else if (data.status === 'running') {
-          // Display detailed progress information
           const stage = data.current_stage || 'processing';
           const progressText = data.progress || '';
           const details = data.details || '';
 
-          // Set status with more detailed information
           setStatus(`${stage}${details ? ': ' + details : ''}`);
 
-          // Update progress bar
           if (progressText) {
             const progressValue = parseInt(progressText.replace('%', '')) || 0;
             setProgress(progressValue);
           } else {
-            // If no explicit progress, increment slightly to show activity
-            setProgress(prev => Math.min(prev + 2, 95)); // Slightly faster progress increment
+            setProgress(prev => Math.min(prev + 2, 95));
           }
         } else {
           setStatus(`Scanning... (${data.status})`);
-          // Show some progress even when status is indeterminate
           setProgress(prev => Math.min(prev + 2, 90));
         }
       } catch (error: any) {
@@ -158,7 +151,6 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
       }
     }, retryDelay);
 
-    // Return cleanup function
     return () => clearInterval(interval);
   };
 

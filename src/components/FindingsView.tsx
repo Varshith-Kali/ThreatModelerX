@@ -40,7 +40,7 @@ function FindingsView({ scanId }: FindingsViewProps) {
   const [expandedFindings, setExpandedFindings] = useState<Set<string>>(new Set());
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
 
-  const API_BASE = 'http://localhost:8000';
+  const API_BASE = 'http:
 
   useEffect(() => {
     fetchFindings();
@@ -102,7 +102,6 @@ function FindingsView({ scanId }: FindingsViewProps) {
 
       const data = await response.json();
 
-      // Update the finding in the local state
       setFindings(findings.map(finding =>
         finding.id === findingId
           ? { ...finding, status: reviewData.status, manual_review: reviewData, reviewer_comments: [...(finding.reviewer_comments || []), { comment: reviewData.comment, reviewer: reviewData.reviewer, timestamp: new Date().toISOString() }] }

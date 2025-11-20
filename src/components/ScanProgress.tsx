@@ -8,7 +8,6 @@ interface ScanProgressProps {
 }
 
 function ScanProgress({ status, progress, stage, error }: ScanProgressProps) {
-  // Determine the status icon and color
   const getStatusIcon = () => {
     if (status === 'completed') {
       return <CheckCircle className="h-5 w-5 text-green-400" />;
@@ -19,7 +18,6 @@ function ScanProgress({ status, progress, stage, error }: ScanProgressProps) {
     }
   };
 
-  // Determine the status color class
   const getStatusColorClass = () => {
     if (status === 'completed') {
       return 'bg-green-500/20 text-green-400';
@@ -32,13 +30,13 @@ function ScanProgress({ status, progress, stage, error }: ScanProgressProps) {
 
   return (
     <div className="mt-4 space-y-3">
-      {/* Status indicator */}
+      {}
       <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${getStatusColorClass()}`}>
         {getStatusIcon()}
         <span>{status}</span>
       </div>
 
-      {/* Progress bar */}
+      {}
       <div className="w-full bg-secondary rounded-full h-2.5 overflow-hidden">
         <div 
           className="h-full bg-highlight transition-all duration-500 ease-out"
@@ -46,14 +44,14 @@ function ScanProgress({ status, progress, stage, error }: ScanProgressProps) {
         />
       </div>
 
-      {/* Stage information */}
+      {}
       {stage && (
         <div className="text-sm text-text-secondary">
           Current stage: <span className="text-accent font-medium">{stage}</span>
         </div>
       )}
 
-      {/* Error message */}
+      {}
       {error && (
         <div className="text-sm text-red-400 bg-red-400/10 p-2 rounded">
           {error}

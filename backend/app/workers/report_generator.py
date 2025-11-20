@@ -22,10 +22,8 @@ class ReportGenerator:
             templates_dir: Directory containing report templates
         """
         if templates_dir is None:
-            # Use default templates directory relative to this file
             templates_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
             
-        # Create templates directory if it doesn't exist
         os.makedirs(templates_dir, exist_ok=True)
             
         self.templates_dir = templates_dir
@@ -34,7 +32,6 @@ class ReportGenerator:
             autoescape=jinja2.select_autoescape(['html', 'xml'])
         )
         
-        # Create default templates if they don't exist
         self._ensure_default_templates()
         
     def _ensure_default_templates(self):
@@ -50,23 +47,23 @@ class ReportGenerator:
                 body {
                     font-family: Arial, sans-serif;
                     line-height: 1.6;
-                    color: #333;
+                    color:
                     max-width: 1200px;
                     margin: 0 auto;
                     padding: 20px;
                 }
                 h1, h2, h3 {
-                    color: #2c3e50;
+                    color:
                 }
                 .header {
-                    background-color: #34495e;
+                    background-color:
                     color: white;
                     padding: 20px;
                     margin-bottom: 20px;
                     border-radius: 5px;
                 }
                 .summary {
-                    background-color: #f8f9fa;
+                    background-color:
                     padding: 15px;
                     border-radius: 5px;
                     margin-bottom: 20px;
@@ -77,33 +74,33 @@ class ReportGenerator:
                     margin-bottom: 20px;
                 }
                 .findings-table th, .findings-table td {
-                    border: 1px solid #ddd;
+                    border: 1px solid
                     padding: 12px;
                     text-align: left;
                 }
                 .findings-table th {
-                    background-color: #f2f2f2;
+                    background-color:
                 }
                 .findings-table tr:nth-child(even) {
-                    background-color: #f9f9f9;
+                    background-color:
                 }
                 .severity-critical {
-                    background-color: #ffdddd;
+                    background-color:
                 }
                 .severity-high {
-                    background-color: #ffeecc;
+                    background-color:
                 }
                 .severity-medium {
-                    background-color: #ffffcc;
+                    background-color:
                 }
                 .severity-low {
-                    background-color: #e6ffe6;
+                    background-color:
                 }
                 .footer {
                     margin-top: 30px;
                     text-align: center;
                     font-size: 0.8em;
-                    color: #7f8c8d;
+                    color:
                 }
             </style>
         </head>
@@ -242,7 +239,6 @@ class ReportGenerator:
         findings = scan_result.get("findings", [])
         threats = scan_result.get("threats", [])
         
-        # Count findings by severity
         severity_counts = {
             "CRITICAL": 0,
             "HIGH": 0,

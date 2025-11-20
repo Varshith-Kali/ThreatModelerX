@@ -21,7 +21,6 @@ from .workers.remediation_planner import RemediationPlanner
 from .workers.report_generator import ReportGenerator
 from .workers.email_notifier import EmailNotifier
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -34,10 +33,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add GZip compression for better performance
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -46,7 +43,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add request timing middleware
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     start_time = datetime.utcnow()
@@ -55,7 +51,6 @@ async def add_process_time_header(request: Request, call_next):
     response.headers["X-Process-Time"] = str(process_time)
     return response
 
-# Use a persistent storage with TTL for scan results
 import json
 import os
 from collections import OrderedDict
@@ -86,13 +81,11 @@ class PersistentTTLCache(OrderedDict):
     def _save_to_disk(self):
         """Save current cache to disk"""
         try:
-            # Create a copy of the data with datetime objects converted to strings
             serializable_data = {}
             for key, value in self.items():
                 serializable_value = value.copy()
                 if 'expiry' in serializable_value and isinstance(serializable_value['expiry'], datetime):
                     serializable_value['expiry'] = serializable_value['expiry'].isoformat()
-                # Convert any other datetime objects in the result
                 if 'result' in serializable_value and serializable_value['result']:
                     serializable_value['result'] = json.loads(datetime_safe_dumps(serializable_value['result']))
                 serializable_data[key] = serializable_value
@@ -122,7 +115,7 @@ class PersistentTTLCache(OrderedDict):
         super().__delitem__(key)
         self._save_to_disk()
 
-scan_results_store = PersistentTTLCache(max_size=100, ttl=86400)  # Store up to 100 scans for 24 hours
+scan_results_store = PersistentTTLCache(max_size=100, ttl=86400)
 
 @app.get("/")
 async def root():
@@ -193,12 +186,10 @@ async def export_report(scan_id: str, export_format: str = "json", email: Option
     if export_format == "json":
         result = scan_data
     elif export_format in ["html", "pdf"]:
-        # Use the ReportGenerator to create HTML or PDF reports
         report_generator = ReportGenerator()
         try:
             report_path = report_generator.generate_report(scan_data, format=export_format)
             
-            # If email is provided, send the report via email
             if email:
                 try:
                     email_notifier = EmailNotifier()
@@ -212,10 +203,7 @@ async def export_report(scan_id: str, export_format: str = "json", email: Option
                     logger.info(f"Report for scan {scan_id} sent to {email}")
                 except Exception as email_error:
                     logger.error(f"Failed to send email with report: {str(email_error)}")
-                    # Continue execution to return the report even if email fails
             
-            # In a real implementation, we would return the file for download
-            # For now, return the path to the generated report
             return {
                 "status": "success",
                 "report_format": export_format,
@@ -245,26 +233,19 @@ def datetime_safe_dumps(obj):
 async def create_scan(request: ScanRequest, background_tasks: BackgroundTasks):
     scan_id = f"SCAN-{uuid.uuid4().hex[:12]}"
     
-    # Log the incoming request for debugging
     logger.info(f"Received scan request: {request.dict()}")
     
-    # HARDCODED SOLUTION: Use direct paths to demo apps based on selection
-    # The demo-apps folder is in the project root, not in the backend folder
     project_root = os.path.abspath(os.path.join(os.getcwd(), ".."))
     
     if "python-flask" in request.repo_path:
-        # Python Flask demo app
         repo_path = os.path.join(project_root, "demo-apps", "python-flask")
     elif "node-express" in request.repo_path:
-        # Node Express demo app
         repo_path = os.path.join(project_root, "demo-apps", "node-express")
     else:
-        # Default to Python Flask if path can't be determined
         repo_path = os.path.join(project_root, "demo-apps", "python-flask")
         
     logger.info(f"Using hardcoded demo path: {repo_path}")
     
-    # Final check to ensure path exists
     if not os.path.exists(repo_path):
         logger.error(f"Path does not exist: {repo_path}")
         raise HTTPException(status_code=400, detail=f"Repository path not found: {repo_path}")
@@ -288,13 +269,10 @@ async def auto_scan(request: ScanRequest):
     """
     One-click automated scan endpoint that runs the scan and returns the scan ID
     """
-    # Create a regular scan without background tasks
     scan_id = f"SCAN-{uuid.uuid4().hex[:12]}"
     
-    # Log the incoming request for debugging
     logger.info(f"Received auto scan request: {request.dict()}")
     
-    # HARDCODED SOLUTION: Use direct paths to demo apps based on selection
     project_root = os.path.abspath(os.path.join(os.getcwd(), ".."))
     
     if "python-flask" in request.repo_path:
@@ -306,7 +284,6 @@ async def auto_scan(request: ScanRequest):
         
     logger.info(f"Using hardcoded demo path for auto scan: {repo_path}")
     
-    # Final check to ensure path exists
     if not os.path.exists(repo_path):
         logger.error(f"Path does not exist: {repo_path}")
         raise HTTPException(status_code=400, detail=f"Repository path not found: {repo_path}")
@@ -317,16 +294,12 @@ async def auto_scan(request: ScanRequest):
         "started_at": datetime.utcnow().isoformat()
     }
 
-    # Run scan synchronously for auto endpoint
     try:
-        # Run the scan directly
         result = await run_scan(scan_id, request)
         
-        # Get findings and threats
         findings = result.get("findings", [])
         threats = result.get("threats", [])
         
-        # Generate summary
         summary = {
             "scan_id": scan_id,
             "timestamp": datetime.utcnow().isoformat(),
@@ -653,7 +626,6 @@ async def generate_report(scan_id: str, format: str = "json"):
     findings = result.get("findings", [])
     threats = result.get("threats", [])
     
-    # Create summary statistics
     summary = {
         "scan_id": scan_id,
         "timestamp": result.get("timestamp", datetime.utcnow().isoformat()),
@@ -687,7 +659,6 @@ async def generate_report(scan_id: str, format: str = "json"):
             }
         }
     elif format.lower() == "html":
-        # Generate HTML report
         findings_html = ""
         for f in findings:
             findings_html += f"""

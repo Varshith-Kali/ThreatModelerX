@@ -16,14 +16,13 @@ function ScanLogs({ scanId, visible }: ScanLogsProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  const API_BASE = 'http://localhost:8000';
+  const API_BASE = 'http:
 
   useEffect(() => {
     if (!scanId || !visible) return;
     
     setIsLoading(true);
     
-    // Initial log entry
     setLogs([
       {
         timestamp: new Date().toISOString(),
@@ -32,7 +31,6 @@ function ScanLogs({ scanId, visible }: ScanLogsProps) {
       }
     ]);
     
-    // Poll for scan status to generate log entries
     const interval = setInterval(async () => {
       try {
         const response = await fetch(`${API_BASE}/api/scan/${scanId}`);

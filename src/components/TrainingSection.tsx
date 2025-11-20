@@ -7,7 +7,7 @@ export default function TrainingSection() {
       title: "Input Validation",
       description: "Always validate and sanitize all user inputs to prevent injection attacks.",
       icon: Shield,
-      link: "https:
+      link: "https://owasp.org/www-project-proactive-controls/v3/en/c5-validate-inputs",
       color: "text-purple-400"
     },
     {
@@ -15,7 +15,7 @@ export default function TrainingSection() {
       title: "Authentication & Authorization",
       description: "Implement strong authentication and proper authorization checks.",
       icon: Lock,
-      link: "https:
+      link: "https://owasp.org/www-project-top-ten/2017/A2_2017-Broken_Authentication",
       color: "text-blue-400"
     },
     {
@@ -23,7 +23,7 @@ export default function TrainingSection() {
       title: "Secure Data Storage",
       description: "Encrypt sensitive data at rest and in transit. Never store secrets in code.",
       icon: Code,
-      link: "https:
+      link: "https://owasp.org/www-project-top-ten/2017/A3_2017-Sensitive_Data_Exposure",
       color: "text-green-400"
     },
     {
@@ -31,7 +31,7 @@ export default function TrainingSection() {
       title: "Dependency Management",
       description: "Regularly update dependencies and scan for vulnerabilities.",
       icon: AlertTriangle,
-      link: "https:
+      link: "https://owasp.org/www-project-top-ten/2017/A9_2017-Using_Components_with_Known_Vulnerabilities",
       color: "text-yellow-400"
     },
     {
@@ -39,7 +39,7 @@ export default function TrainingSection() {
       title: "Security Testing",
       description: "Integrate security testing into your CI/CD pipeline.",
       icon: BookOpen,
-      link: "https:
+      link: "https://owasp.org/www-project-devsecops-guideline/",
       color: "text-pink-400"
     }
   ];
@@ -48,19 +48,19 @@ export default function TrainingSection() {
     {
       title: "OWASP Top 10",
       description: "The standard awareness document for developers and web application security.",
-      link: "https:
+      link: "https://owasp.org/www-project-top-ten/",
       icon: FileText
     },
     {
       title: "OWASP Cheat Sheet Series",
       description: "Concise collection of high value information on specific application security topics.",
-      link: "https:
+      link: "https://cheatsheetseries.owasp.org/",
       icon: Code
     },
     {
       title: "SANS Security Resources",
       description: "Information security training, certification, and research.",
-      link: "https:
+      link: "https://www.sans.org/security-resources/",
       icon: GraduationCap
     }
   ];

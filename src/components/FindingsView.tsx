@@ -40,7 +40,7 @@ function FindingsView({ scanId }: FindingsViewProps) {
   const [expandedFindings, setExpandedFindings] = useState<Set<string>>(new Set());
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
 
-  const API_BASE = 'http:
+  const API_BASE = 'http://localhost:8000';
 
   useEffect(() => {
     fetchFindings();
@@ -242,9 +242,9 @@ function FindingsView({ scanId }: FindingsViewProps) {
                       </p>
                     </div>
                     <div className={`p-2 rounded-full ${finding.severity === 'CRITICAL' ? 'bg-critical/10 text-critical' :
-                        finding.severity === 'HIGH' ? 'bg-high/10 text-high' :
-                          finding.severity === 'MEDIUM' ? 'bg-medium/10 text-medium' :
-                            'bg-low/10 text-low'
+                      finding.severity === 'HIGH' ? 'bg-high/10 text-high' :
+                        finding.severity === 'MEDIUM' ? 'bg-medium/10 text-medium' :
+                          'bg-low/10 text-low'
                       }`}>
                       <AlertCircle className="h-6 w-6" />
                     </div>

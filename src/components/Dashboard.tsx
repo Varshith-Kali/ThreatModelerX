@@ -30,7 +30,7 @@ function Dashboard({ onViewScan }: DashboardProps) {
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = 'http:
+  const API_BASE = 'http://localhost:8000';
 
   useEffect(() => {
     fetchData();
@@ -191,10 +191,10 @@ function Dashboard({ onViewScan }: DashboardProps) {
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${scan.status === 'completed'
-                        ? 'bg-low/10 text-low border border-low/20'
-                        : scan.status === 'running'
-                          ? 'bg-accent-DEFAULT/10 text-accent-DEFAULT border border-accent-DEFAULT/20 animate-pulse'
-                          : 'bg-critical/10 text-critical border border-critical/20'
+                      ? 'bg-low/10 text-low border border-low/20'
+                      : scan.status === 'running'
+                        ? 'bg-accent-DEFAULT/10 text-accent-DEFAULT border border-accent-DEFAULT/20 animate-pulse'
+                        : 'bg-critical/10 text-critical border border-critical/20'
                       }`}
                   >
                     {scan.status}

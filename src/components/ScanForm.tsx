@@ -17,7 +17,7 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
 
   const [showLogs, setShowLogs] = useState(false);
 
-  const API_BASE = 'http:
+  const API_BASE = 'http://localhost:8000';
 
   const demoApps = [
     { value: './demo-apps/python-flask', label: 'Python Flask', icon: <Coffee className="h-5 w-5 text-yellow-400" />, description: 'Vulnerable Python web application' },

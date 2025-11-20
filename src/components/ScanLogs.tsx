@@ -15,14 +15,14 @@ interface LogEntry {
 function ScanLogs({ scanId, visible }: ScanLogsProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
-  const API_BASE = 'http:
+
+  const API_BASE = 'http://localhost:8000';
 
   useEffect(() => {
     if (!scanId || !visible) return;
-    
+
     setIsLoading(true);
-    
+
     setLogs([
       {
         timestamp: new Date().toISOString(),
@@ -30,18 +30,18 @@ function ScanLogs({ scanId, visible }: ScanLogsProps) {
         type: 'info'
       }
     ]);
-    
+
     const interval = setInterval(async () => {
       try {
         const response = await fetch(`${API_BASE}/api/scan/${scanId}`);
-        
+
         if (!response.ok) {
           addLog(`Failed to fetch scan status: HTTP ${response.status}`, 'error');
           return;
         }
-        
+
         const data = await response.json();
-        
+
         if (data.status === 'completed') {
           addLog(`Scan completed successfully`, 'success');
           clearInterval(interval);
@@ -53,7 +53,7 @@ function ScanLogs({ scanId, visible }: ScanLogsProps) {
         } else if (data.status === 'running') {
           const stage = data.current_stage || 'processing';
           const details = data.details || '';
-          
+
           if (details) {
             addLog(`${stage}: ${details}`, 'info');
           }
@@ -63,10 +63,10 @@ function ScanLogs({ scanId, visible }: ScanLogsProps) {
         addLog(`Error checking scan status: ${errorMessage}`, 'error');
       }
     }, 2000);
-    
+
     return () => clearInterval(interval);
   }, [scanId, visible]);
-  
+
   const addLog = (message: string, type: 'info' | 'warning' | 'error' | 'success') => {
     setLogs(prev => [
       ...prev,
@@ -77,7 +77,7 @@ function ScanLogs({ scanId, visible }: ScanLogsProps) {
       }
     ]);
   };
-  
+
   const getIconForType = (type: string) => {
     switch (type) {
       case 'info':
@@ -92,7 +92,7 @@ function ScanLogs({ scanId, visible }: ScanLogsProps) {
         return <Terminal className="h-4 w-4 text-accent" />;
     }
   };
-  
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString();
@@ -114,18 +114,17 @@ function ScanLogs({ scanId, visible }: ScanLogsProps) {
           </div>
         )}
       </div>
-      
+
       <div className="bg-primary/50 rounded-lg p-3 h-96 overflow-y-auto font-mono text-sm">
         {logs.length === 0 ? (
           <div className="text-accent/50 text-center py-4">No logs available</div>
         ) : (
           <div className="space-y-1">
             {logs.map((log, index) => (
-              <div 
-                key={index} 
-                className={`flex items-start py-1 ${
-                  index % 2 === 0 ? 'bg-primary/20' : ''
-                } rounded px-2`}
+              <div
+                key={index}
+                className={`flex items-start py-1 ${index % 2 === 0 ? 'bg-primary/20' : ''
+                  } rounded px-2`}
               >
                 <div className="mr-2 mt-1">{getIconForType(log.type)}</div>
                 <div className="flex-1">

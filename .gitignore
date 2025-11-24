@@ -1,3 +1,4 @@
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -6,11 +7,31 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
 *.local
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+env/
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+scan_results.db
+
+# IDE
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -20,4 +41,25 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.env
+
+# Uploads and Reports
+backend/app/uploads/*
+!backend/app/uploads/.gitkeep
+backend/reports/*
+!backend/reports/.gitkeep
+
+# Test files
+test_*.py
+*_test.py
+quick_test.py
+scan_demo_apps.py
+debug_*.py
+
+# Build artifacts
+build/
+*.egg-info/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db

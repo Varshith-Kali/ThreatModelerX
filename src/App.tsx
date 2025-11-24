@@ -47,7 +47,10 @@ function App() {
               <span>New Scan</span>
             </button>
             <button
-              onClick={() => setCurrentView('findings')}
+              onClick={() => {
+                setSelectedScanId(null); // Clear scan filter to show ALL findings
+                setCurrentView('findings');
+              }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all ${currentView === 'findings'
                 ? 'bg-primary-light text-accent'
                 : 'text-text-secondary hover:text-accent hover:bg-primary-light/50'
@@ -57,7 +60,10 @@ function App() {
               <span>Findings</span>
             </button>
             <button
-              onClick={() => setCurrentView('threats')}
+              onClick={() => {
+                setSelectedScanId(null); // Clear scan filter to show ALL threats
+                setCurrentView('threats');
+              }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all ${currentView === 'threats'
                 ? 'bg-primary-light text-accent'
                 : 'text-text-secondary hover:text-accent hover:bg-primary-light/50'

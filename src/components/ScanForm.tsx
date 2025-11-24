@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PlayCircle, Loader2, Shield, Code, Terminal, FileCode, Server, Coffee, Zap } from 'lucide-react';
+import { PlayCircle, Loader2, Shield, Code, Terminal, FileCode, Server, Coffee, Zap, Upload, FolderOpen } from 'lucide-react';
 import ScanProgress from './ScanProgress';
 import ScanLogs from './ScanLogs';
 
@@ -9,6 +9,9 @@ interface ScanFormProps {
 
 function ScanForm({ onScanComplete }: ScanFormProps) {
   const [repoPath, setRepoPath] = useState('./demo-apps/python-flask');
+  const [scanSource, setScanSource] = useState<'demo' | 'custom' | 'upload'>('demo');
+  const [uploading, setUploading] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [scanTypes, setScanTypes] = useState(['sast', 'threat_model']);
   const [scanning, setScanning] = useState(false);
   const [scanId, setScanId] = useState<string | null>(null);
@@ -30,6 +33,40 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
     { value: 'sast', label: 'Static Analysis (SAST)', icon: <Code className="h-5 w-5 text-accent-DEFAULT" />, description: 'Semgrep, Bandit, Retire.js' },
     { value: 'threat_modeling', label: 'Threat Modeling', icon: <Shield className="h-5 w-5 text-accent-DEFAULT" />, description: 'STRIDE + MITRE ATT&CK mapping' },
   ];
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploadedFileName(file.name);
+      setUploading(true);
+      setStatus('Uploading codebase...');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch(`${API_BASE}/api/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setRepoPath(data.path);
+          setStatus('File uploaded successfully. Ready to scan.');
+        } else {
+          setStatus('Upload failed. Please try again.');
+          setUploadedFileName(null);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        setStatus('Upload error. Please check server connection.');
+        setUploadedFileName(null);
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +118,7 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
 
   const pollScanStatus = async (id: string) => {
     let retryCount = 0;
-    const maxRetries = 30;
+    const maxRetries = 300; // 10 minutes timeout
     const retryDelay = 2000;
 
     const interval = setInterval(async () => {
@@ -181,39 +218,118 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
               <Terminal className="mr-2 h-5 w-5 text-accent-DEFAULT" />
               Target Repository / Application
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {demoApps.map((app) => (
-                <div
-                  key={app.value}
-                  onClick={() => !scanning && setRepoPath(app.value)}
-                  className={`p-4 rounded-lg border cursor-pointer transition-all duration-300 ${repoPath === app.value
-                    ? 'bg-accent-DEFAULT/10 border-accent-DEFAULT ring-1 ring-accent-DEFAULT'
-                    : 'bg-secondary border-highlight hover:border-accent-DEFAULT/50 hover:bg-secondary-light'
-                    } ${scanning ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <div className="flex items-center mb-2">
-                    <div className={`p-2 rounded-full mr-3 ${repoPath === app.value ? 'bg-accent-DEFAULT text-primary' : 'bg-primary-light'}`}>
-                      {app.icon}
-                    </div>
-                    <span className={`font-bold ${repoPath === app.value ? 'text-accent-DEFAULT' : 'text-text-primary'}`}>
-                      {app.label}
-                    </span>
-                  </div>
-                  <p className="text-sm text-text-secondary ml-12">{app.description}</p>
+            <div className="flex space-x-4 mb-6">
+              <button
+                type="button"
+                onClick={() => setScanSource('demo')}
+                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${scanSource === 'demo'
+                  ? 'bg-accent-DEFAULT text-primary shadow-lg'
+                  : 'bg-primary-light border border-highlight text-text-primary hover:bg-secondary-light hover:border-accent-DEFAULT/50'
+                  }`}
+              >
+                <div className="flex items-center justify-center">
+                  <Coffee className="w-4 h-4 mr-2" />
+                  Demo Apps
                 </div>
-              ))}
+              </button>
+              <button
+                type="button"
+                onClick={() => setScanSource('upload')}
+                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${scanSource === 'upload'
+                  ? 'bg-accent-DEFAULT text-primary shadow-lg'
+                  : 'bg-primary-light border border-highlight text-text-primary hover:bg-secondary-light hover:border-accent-DEFAULT/50'
+                  }`}
+              >
+                <div className="flex items-center justify-center">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Code
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setScanSource('custom')}
+                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${scanSource === 'custom'
+                  ? 'bg-accent-DEFAULT text-primary shadow-lg'
+                  : 'bg-primary-light border border-highlight text-text-primary hover:bg-secondary-light hover:border-accent-DEFAULT/50'
+                  }`}
+              >
+                <div className="flex items-center justify-center">
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Custom Path
+                </div>
+              </button>
             </div>
-            <div className="mt-4 relative">
-              <input
-                type="text"
-                value={repoPath}
-                onChange={(e) => setRepoPath(e.target.value)}
-                className="w-full bg-primary-light border border-highlight rounded-lg pl-10 pr-4 py-3 text-text-primary focus:outline-none focus:border-accent-DEFAULT transition-colors font-mono text-sm"
-                placeholder="Or enter custom path..."
-                disabled={scanning}
-              />
-              <FileCode className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
-            </div>
+
+            {scanSource === 'demo' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                {demoApps.map((app) => (
+                  <div
+                    key={app.value}
+                    onClick={() => !scanning && setRepoPath(app.value)}
+                    className={`p-4 rounded-lg border cursor-pointer transition-all duration-300 ${repoPath === app.value
+                      ? 'bg-accent-DEFAULT/10 border-accent-DEFAULT ring-1 ring-accent-DEFAULT'
+                      : 'bg-secondary border-highlight hover:border-accent-DEFAULT/50 hover:bg-secondary-light'
+                      } ${scanning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="flex items-center mb-2">
+                      <div className={`p-2 rounded-full mr-3 ${repoPath === app.value ? 'bg-accent-DEFAULT text-primary' : 'bg-primary-light'}`}>
+                        {app.icon}
+                      </div>
+                      <span className={`font-bold ${repoPath === app.value ? 'text-accent-DEFAULT' : 'text-text-primary'}`}>
+                        {app.label}
+                      </span>
+                    </div>
+                    <p className="text-sm text-text-secondary ml-12">{app.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {scanSource === 'upload' && (
+              <div className="animate-fade-in p-8 border-2 border-dashed border-highlight rounded-lg bg-secondary/50 text-center hover:border-accent-DEFAULT/50 transition-colors relative">
+                <input
+                  type="file"
+                  onChange={handleFileUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  accept=".zip,.rar,.7z,application/zip,application/x-zip-compressed"
+                  disabled={scanning || uploading}
+                />
+                <div className="flex flex-col items-center justify-center">
+                  {uploading ? (
+                    <Loader2 className="h-12 w-12 text-accent-DEFAULT animate-spin mb-4" />
+                  ) : (
+                    <Upload className="h-12 w-12 text-text-muted mb-4" />
+                  )}
+                  <h3 className="text-lg font-bold text-text-primary mb-2">
+                    {uploading ? 'Uploading...' : uploadedFileName ? 'File Uploaded' : 'Drop your codebase here'}
+                  </h3>
+                  <p className="text-text-secondary mb-4">
+                    {uploadedFileName
+                      ? `Ready to scan: ${uploadedFileName}`
+                      : 'Support for .zip archives containing your source code'}
+                  </p>
+                  {!uploadedFileName && (
+                    <span className="px-4 py-2 bg-primary-light rounded-md text-sm text-accent-DEFAULT font-mono border border-accent-DEFAULT/20">
+                      Click to browse
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {scanSource === 'custom' && (
+              <div className="mt-4 relative animate-fade-in">
+                <input
+                  type="text"
+                  value={repoPath}
+                  onChange={(e) => setRepoPath(e.target.value)}
+                  className="w-full bg-primary-light border border-highlight rounded-lg pl-10 pr-4 py-3 text-text-primary focus:outline-none focus:border-accent-DEFAULT transition-colors font-mono text-sm"
+                  placeholder="Enter absolute path to local directory..."
+                  disabled={scanning}
+                />
+                <FileCode className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
+              </div>
+            )}
           </div>
 
           <div>

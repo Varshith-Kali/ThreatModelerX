@@ -27,7 +27,7 @@ class BanditRunner:
             env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
 
             result = subprocess.run(
-                ["bandit", "-r", repo_path, "-f", "json"],
+                ["bandit", "-r", repo_path, "-f", "json", "--recursive"], # Explicit recursive flag although -r does it
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,

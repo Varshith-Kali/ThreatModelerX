@@ -27,7 +27,7 @@ class SemgrepRunner:
             env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
 
             result = subprocess.run(
-                ["semgrep", "--config=auto", "--json", "--quiet", repo_path],
+                ["semgrep", "--config=auto", "--json", "--quiet", "--recursive", repo_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
                 text=True,

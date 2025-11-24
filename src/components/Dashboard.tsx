@@ -34,10 +34,23 @@ function Dashboard({ onViewScan }: DashboardProps) {
 
   useEffect(() => {
     fetchData();
+
+    // Set up polling to refresh data every 5 seconds for real-time updates
+    const intervalId = setInterval(() => {
+      fetchData();
+    }, 5000); // Poll every 5 seconds
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
+    // Don't show loading spinner on subsequent fetches (only on initial load)
+    const isInitialLoad = stats === null;
+    if (isInitialLoad) {
+      setLoading(true);
+    }
+
     try {
       const [statsRes, scansRes] = await Promise.all([
         fetch(`${API_BASE}/api/stats`),
@@ -52,7 +65,9 @@ function Dashboard({ onViewScan }: DashboardProps) {
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
-      setLoading(false);
+      if (isInitialLoad) {
+        setLoading(false);
+      }
     }
   };
 

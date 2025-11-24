@@ -8,6 +8,9 @@ import logging
 from datetime import datetime, timedelta
 import uuid
 from functools import lru_cache
+import shutil
+import zipfile
+from fastapi import UploadFile, File
 
 from .models import (
     ScanRequest, ScanResult, Finding, Threat,
@@ -55,67 +58,166 @@ import json
 import os
 from collections import OrderedDict
 
-class PersistentTTLCache(OrderedDict):
-    def __init__(self, max_size=1000, ttl=3600, storage_file="scan_results.json"):
-        self.max_size = max_size
-        self.ttl = ttl
-        self.storage_file = os.path.join(os.path.dirname(__file__), storage_file)
-        super().__init__()
-        self._load_from_disk()
-        
-    def _load_from_disk(self):
-        """Load cached results from disk if available"""
-        try:
-            if os.path.exists(self.storage_file):
-                with open(self.storage_file, 'r') as f:
-                    data = json.load(f)
-                    for key, value in data.items():
-                        # Convert expiry string back to datetime
-                        if 'expiry' in value and isinstance(value['expiry'], str):
-                            value['expiry'] = datetime.fromisoformat(value['expiry'])
-                        super().__setitem__(key, value)
-                logger.info(f"Loaded {len(data)} scan results from persistent storage")
-        except Exception as e:
-            logger.error(f"Error loading scan results from disk: {str(e)}")
-    
-    def _save_to_disk(self):
-        """Save current cache to disk"""
-        try:
-            serializable_data = {}
-            for key, value in self.items():
-                serializable_value = value.copy()
-                if 'expiry' in serializable_value and isinstance(serializable_value['expiry'], datetime):
-                    serializable_value['expiry'] = serializable_value['expiry'].isoformat()
-                if 'result' in serializable_value and serializable_value['result']:
-                    serializable_value['result'] = json.loads(datetime_safe_dumps(serializable_value['result']))
-                serializable_data[key] = serializable_value
-                
-            with open(self.storage_file, 'w') as f:
-                json.dump(serializable_data, f)
-            logger.info(f"Saved {len(self)} scan results to persistent storage")
-        except Exception as e:
-            logger.error(f"Error saving scan results to disk: {str(e)}")
-        
-    def __setitem__(self, key, value):
-        if len(self) >= self.max_size:
-            self.popitem(last=False)
-        value['expiry'] = datetime.utcnow() + timedelta(seconds=self.ttl)
-        super().__setitem__(key, value)
-        self._save_to_disk()
-        
-    def __getitem__(self, key):
-        value = super().__getitem__(key)
-        if datetime.utcnow() > value.get('expiry', datetime.max):
-            del self[key]
-            self._save_to_disk()
-            raise KeyError(key)
-        return value
-    
-    def __delitem__(self, key):
-        super().__delitem__(key)
-        self._save_to_disk()
+import sqlite3
+import json
+from datetime import datetime, timedelta
 
-scan_results_store = PersistentTTLCache(max_size=100, ttl=86400)
+class CustomJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects"""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
+def datetime_safe_dumps(obj):
+    """Helper function to safely serialize objects with datetime values"""
+    return json.dumps(obj, cls=CustomJSONEncoder)
+
+class SQLiteScanStore:
+    def __init__(self, db_file="scan_results.db", ttl=2592000):  # 30 days TTL instead of 1 day
+        self.db_file = os.path.join(os.path.dirname(__file__), db_file)
+        self.ttl = ttl
+        self._init_db()
+
+    def _init_db(self):
+        with sqlite3.connect(self.db_file) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS scans (
+                    scan_id TEXT PRIMARY KEY,
+                    data TEXT,
+                    expiry TIMESTAMP
+                )
+            """)
+            conn.commit()
+
+    def __setitem__(self, key, value):
+        expiry = datetime.utcnow() + timedelta(seconds=self.ttl)
+        # Serialize value, handling datetime objects
+        serialized_value = json.dumps(value, cls=CustomJSONEncoder)
+        
+        with sqlite3.connect(self.db_file) as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO scans (scan_id, data, expiry) VALUES (?, ?, ?)",
+                (key, serialized_value, expiry)
+            )
+            conn.commit()
+
+    def __getitem__(self, key):
+        try:
+            with sqlite3.connect(self.db_file) as conn:
+                cursor = conn.execute("SELECT data, expiry FROM scans WHERE scan_id = ?", (key,))
+                row = cursor.fetchone()
+                
+                if not row:
+                    raise KeyError(key)
+                    
+                data_str, expiry_str = row
+                # Don't check expiry - keep all data permanently unless manually deleted
+                # This prevents data loss during active usage
+                    
+                return json.loads(data_str)
+        except sqlite3.Error as e:
+            logger.error(f"Database error retrieving scan {key}: {str(e)}")
+            raise KeyError(key)
+
+    def __delitem__(self, key):
+        with sqlite3.connect(self.db_file) as conn:
+            conn.execute("DELETE FROM scans WHERE scan_id = ?", (key,))
+            conn.commit()
+
+    def __contains__(self, key):
+        with sqlite3.connect(self.db_file) as conn:
+            cursor = conn.execute("SELECT 1 FROM scans WHERE scan_id = ?", (key,))
+            return cursor.fetchone() is not None
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def items(self):
+        try:
+            with sqlite3.connect(self.db_file) as conn:
+                cursor = conn.execute("SELECT scan_id, data FROM scans")
+                for scan_id, data_str in cursor.fetchall():
+                    try:
+                        yield scan_id, json.loads(data_str)
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Error decoding scan data for {scan_id}: {str(e)}")
+                        continue
+        except sqlite3.Error as e:
+            logger.error(f"Database error in items(): {str(e)}")
+            return
+
+    def __len__(self):
+        """Return the number of scans in the database"""
+        try:
+            with sqlite3.connect(self.db_file) as conn:
+                cursor = conn.execute("SELECT COUNT(*) FROM scans")
+                return cursor.fetchone()[0]
+        except sqlite3.Error as e:
+            logger.error(f"Database error in __len__: {str(e)}")
+            return 0
+
+    def values(self):
+        """Return all scan data values"""
+        try:
+            with sqlite3.connect(self.db_file) as conn:
+                cursor = conn.execute("SELECT data FROM scans")
+                for (data_str,) in cursor.fetchall():
+                    try:
+                        yield json.loads(data_str)
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Error decoding scan data: {str(e)}")
+                        continue
+        except sqlite3.Error as e:
+            logger.error(f"Database error in values(): {str(e)}")
+            return
+
+# Cleanup function for old uploads
+def cleanup_old_uploads(max_age_days: int = 7):
+    """
+    Delete uploaded codebases older than max_age_days.
+    This prevents the uploads folder from growing indefinitely.
+    """
+    uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+    
+    if not os.path.exists(uploads_dir):
+        return
+    
+    cutoff_time = datetime.now() - timedelta(days=max_age_days)
+    deleted_count = 0
+    
+    try:
+        for item in os.listdir(uploads_dir):
+            item_path = os.path.join(uploads_dir, item)
+            
+            if os.path.isdir(item_path):
+                # Get directory creation time
+                dir_created = datetime.fromtimestamp(os.path.getctime(item_path))
+                
+                # Delete if older than cutoff
+                if dir_created < cutoff_time:
+                    try:
+                        shutil.rmtree(item_path)
+                        deleted_count += 1
+                        logger.info(f"Deleted old upload directory: {item} (created {dir_created})")
+                    except Exception as e:
+                        logger.error(f"Failed to delete {item}: {str(e)}")
+        
+        if deleted_count > 0:
+            logger.info(f"Cleanup complete: Deleted {deleted_count} old upload(s)")
+        else:
+            logger.info("Cleanup complete: No old uploads to delete")
+            
+    except Exception as e:
+        logger.error(f"Error during upload cleanup: {str(e)}")
+
+# Run cleanup on startup
+cleanup_old_uploads()
+
+scan_results_store = SQLiteScanStore()
 
 @app.get("/")
 async def root():
@@ -217,16 +319,70 @@ async def export_report(scan_id: str, export_format: str = "json", email: Option
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported export format: {export_format}")
 
-class CustomJSONEncoder(json.JSONEncoder):
-    """Custom JSON encoder that handles datetime objects"""
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
 
-def datetime_safe_dumps(obj):
-    """Helper function to safely serialize objects with datetime values"""
-    return json.dumps(obj, cls=CustomJSONEncoder)
+
+@app.post("/api/upload")
+async def upload_codebase(file: UploadFile = File(...)):
+    upload_dir = os.path.join(os.path.dirname(__file__), "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # Create a unique directory for this upload
+    scan_id = uuid.uuid4().hex
+    extract_path = os.path.join(upload_dir, scan_id)
+    os.makedirs(extract_path, exist_ok=True)
+    
+    file_path = os.path.join(extract_path, file.filename)
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # If it's a zip file, extract it
+        if file.filename.endswith(".zip"):
+            with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                zip_ref.extractall(extract_path)
+            # Remove the zip file after extraction
+            os.remove(file_path)
+            
+            # If the zip contained a single top-level directory, use that as the root
+            items = os.listdir(extract_path)
+            if len(items) == 1 and os.path.isdir(os.path.join(extract_path, items[0])):
+                extract_path = os.path.join(extract_path, items[0])
+                
+        return {"path": extract_path, "message": "File uploaded and extracted successfully"}
+        
+    except Exception as e:
+        logger.error(f"Error handling upload: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+def cleanup_uploads():
+    """Periodically clean up old uploaded files"""
+    upload_dir = os.path.join(os.path.dirname(__file__), "uploads")
+    if not os.path.exists(upload_dir):
+        return
+        
+    # Retention period: 24 hours
+    retention_seconds = 86400
+    now = datetime.utcnow().timestamp()
+    
+    for item in os.listdir(upload_dir):
+        item_path = os.path.join(upload_dir, item)
+        try:
+            # Check modification time
+            mtime = os.path.getmtime(item_path)
+            if now - mtime > retention_seconds:
+                if os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                else:
+                    os.remove(item_path)
+                logger.info(f"Cleaned up old upload: {item}")
+        except Exception as e:
+            logger.error(f"Error cleaning up {item}: {str(e)}")
+
+@app.on_event("startup")
+async def startup_event():
+    # Run cleanup on startup
+    cleanup_uploads()
 
 @app.post("/api/scan", response_model=dict)
 @app.post("/scan", response_model=dict)  # Add additional route to match frontend request
@@ -237,14 +393,22 @@ async def create_scan(request: ScanRequest, background_tasks: BackgroundTasks):
     
     project_root = os.path.abspath(os.path.join(os.getcwd(), ".."))
     
-    if "python-flask" in request.repo_path:
+    
+    # Check if the provided path exists (for uploaded files or absolute paths)
+    if os.path.exists(request.repo_path):
+        repo_path = request.repo_path
+        logger.info(f"Using provided path: {repo_path}")
+    elif "python-flask" in request.repo_path:
         repo_path = os.path.join(project_root, "demo-apps", "python-flask")
     elif "node-express" in request.repo_path:
         repo_path = os.path.join(project_root, "demo-apps", "node-express")
     else:
-        repo_path = os.path.join(project_root, "demo-apps", "python-flask")
-        
-    logger.info(f"Using hardcoded demo path: {repo_path}")
+        # Only default to python-flask if it's one of the known demo paths or empty
+        if "demo-apps" in request.repo_path or not request.repo_path:
+             repo_path = os.path.join(project_root, "demo-apps", "python-flask")
+        else:
+             # If a custom path was provided but doesn't exist, we'll fail later
+             repo_path = request.repo_path
     
     if not os.path.exists(repo_path):
         logger.error(f"Path does not exist: {repo_path}")
@@ -324,57 +488,7 @@ async def auto_scan(request: ScanRequest):
         scan_results_store[scan_id]["error"] = str(e)
         raise HTTPException(status_code=500, detail=f"Error running scan: {str(e)}")
 
-def run_scan_sync(scan_id: str, request: ScanRequest):
-    """Synchronous version of run_scan for the auto endpoint"""
-    try:
-        repo_path = scan_results_store[scan_id]["repo_path"]
-        logger.info(f"Starting scan {scan_id} for {repo_path}")
-        
-        # Initialize results
-        findings = []
-        threats = []
-        
-        # Run SAST scanners if requested
-        if "sast" in request.scan_types:
-            logger.info(f"Running SAST scanners for {scan_id}")
-            
-            # Initialize scanners
-            semgrep = SemgrepRunner()
-            bandit = BanditRunner()
-            retire = RetireRunner()
-            
-            # Run scanners
-            semgrep_findings = semgrep.run(repo_path)
-            bandit_findings = bandit.run(repo_path)
-            retire_findings = retire.run(repo_path)
-            
-            # Combine findings
-            findings.extend(semgrep_findings)
-            findings.extend(bandit_findings)
-            findings.extend(retire_findings)
-            
-            logger.info(f"SAST scan completed for {scan_id}: {len(findings)} findings")
-        
-        # Run threat modeling if requested
-        if "threat_modeling" in request.scan_types:
-            logger.info(f"Running threat modeling for {scan_id}")
-            
-            # Initialize threat modeler
-            threat_modeler = StrideMapper()
-            
-            # Generate threats using the correct analyze_code method
-            threats = threat_modeler.analyze_code(repo_path, findings)
-            
-            logger.info(f"Threat modeling completed for {scan_id}: {len(threats)} threats")
-        
-        # Return combined results
-        return {
-            "findings": findings,
-            "threats": threats
-        }
-    except Exception as e:
-        logger.error(f"Error in run_scan_sync: {str(e)}")
-        raise
+
 
 async def run_scan(scan_id: str, request: ScanRequest):
     try:
@@ -421,7 +535,7 @@ async def run_scan(scan_id: str, request: ScanRequest):
                 # Gather results with timeout (60 seconds)
                 semgrep_findings, bandit_findings, retire_findings = await asyncio.wait_for(
                     asyncio.gather(semgrep_task, bandit_task, retire_task),
-                    timeout=60.0  # 60 second timeout
+                    timeout=300.0  # 5 minute timeout for production codebases
                 )
                 
                 update_progress("processing SAST results", "40%", "Analyzing scanner findings")
@@ -443,6 +557,36 @@ async def run_scan(scan_id: str, request: ScanRequest):
                 ))
             
             update_progress("SAST scanning completed", "50%")
+
+        if "dast" in request.scan_types or "all" in request.scan_types:
+            update_progress("running DAST scanner", "55%", "Initializing ZAP scanner")
+            if request.target_url:
+                try:
+                    zap_runner = ZapRunner()
+                    logger.info(f"Starting DAST scan for {request.target_url}")
+                    
+                    # Run ZAP scan with timeout
+                    zap_task = asyncio.create_task(zap_runner.scan(request))
+                    zap_findings = await asyncio.wait_for(zap_task, timeout=1800.0) # 30 min timeout for DAST
+                    
+                    all_findings.extend(zap_findings)
+                    update_progress("DAST scan completed", "60%", f"Found {len(zap_findings)} DAST vulnerabilities")
+                except asyncio.TimeoutError:
+                    logger.warning(f"DAST scan timed out for {scan_id}")
+                    all_findings.append(Finding(
+                        title="DAST Scan Timeout",
+                        description="The DAST scan timed out. Some results may be missing.",
+                        severity=SeverityLevel.MEDIUM,
+                        tool="OWASP ZAP",
+                        file_path="",
+                        line_number=0
+                    ))
+                except Exception as e:
+                    logger.error(f"Error running DAST scan: {str(e)}")
+                    # Don't fail the whole scan if DAST fails
+            else:
+                logger.info("Skipping DAST scan: No target URL provided")
+                update_progress("skipping DAST", "60%", "No target URL provided for DAST")
 
         threats = []
         attack_graph = {}
@@ -776,30 +920,141 @@ async def get_remediation_plan(finding_id: str):
 
 @app.get("/api/stats")
 async def get_statistics():
-    total_scans = len(scan_results_store)
-    completed_scans = len([s for s in scan_results_store.values() if s["status"] == "completed"])
+    try:
+        total_scans = 0
+        completed_scans = 0
+        total_findings = 0
+        total_threats = 0
+        severity_breakdown = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
 
-    total_findings = 0
-    total_threats = 0
-    severity_breakdown = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+        for scan_id, scan_data in scan_results_store.items():
+            try:
+                total_scans += 1
+                if scan_data.get("status") == "completed":
+                    completed_scans += 1
+                    result = scan_data.get("result", {})
+                    summary = result.get("summary", {})
+                    
+                    total_findings += summary.get("total_findings", 0)
+                    total_threats += summary.get("total_threats", 0)
 
-    for scan_data in scan_results_store.values():
-        if scan_data["status"] == "completed":
-            result = scan_data["result"]
-            total_findings += result["summary"]["total_findings"]
-            total_threats += result["summary"]["total_threats"]
+                    by_severity = summary.get("by_severity", {})
+                    for severity, count in by_severity.items():
+                        severity_key = severity.upper()
+                        if severity_key in severity_breakdown:
+                            severity_breakdown[severity_key] += count
+            except Exception as e:
+                logger.error(f"Error processing scan {scan_id} in statistics: {str(e)}")
+                continue
 
-            for severity, count in result["summary"]["by_severity"].items():
-                severity_breakdown[severity.upper()] += count
-
-    return {
-        "total_scans": total_scans,
-        "completed_scans": completed_scans,
-        "total_findings": total_findings,
-        "total_threats": total_threats,
-        "severity_breakdown": severity_breakdown
-    }
+        return {
+            "total_scans": total_scans,
+            "completed_scans": completed_scans,
+            "total_findings": total_findings,
+            "total_threats": total_threats,
+            "severity_breakdown": severity_breakdown
+        }
+    except Exception as e:
+        logger.error(f"Error generating statistics: {str(e)}")
+        return {
+            "total_scans": 0,
+            "completed_scans": 0,
+            "total_findings": 0,
+            "total_threats": 0,
+            "severity_breakdown": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+        }
 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+
+@app.delete("/api/scan/{scan_id}")
+async def delete_scan(scan_id: str):
+    """Delete a specific scan from the database"""
+    try:
+        if scan_id in scan_results_store:
+            del scan_results_store[scan_id]
+            logger.info(f"Deleted scan: {scan_id}")
+            return {"status": "success", "message": f"Scan {scan_id} deleted"}
+        else:
+            raise HTTPException(status_code=404, detail=f"Scan {scan_id} not found")
+    except Exception as e:
+        logger.error(f"Error deleting scan {scan_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting scan: {str(e)}")
+
+@app.post("/api/scans/clear")
+async def clear_all_scans():
+    """Clear all scans from the database (use with caution)"""
+    try:
+        # Get all scan IDs first
+        scan_ids = list(scan_results_store.items())
+        count = len(scan_ids)
+        
+        # Delete all scans
+        for scan_id, _ in scan_ids:
+            try:
+                del scan_results_store[scan_id]
+            except Exception as e:
+                logger.error(f"Error deleting scan {scan_id}: {str(e)}")
+        
+        logger.info(f"Cleared {count} scans from database")
+        return {"status": "success", "message": f"Cleared {count} scans", "count": count}
+    except Exception as e:
+        logger.error(f"Error clearing scans: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error clearing scans: {str(e)}")
+
+@app.post("/api/uploads/cleanup")
+async def cleanup_uploads(max_age_days: int = 7):
+    """
+    Manually trigger cleanup of old upload directories.
+    Deletes uploads older than max_age_days (default: 7 days)
+    """
+    try:
+        uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+        
+        if not os.path.exists(uploads_dir):
+            return {
+                "status": "success",
+                "message": "No uploads directory found",
+                "deleted_count": 0,
+                "space_freed_mb": 0
+            }
+        
+        cutoff_time = datetime.now() - timedelta(days=max_age_days)
+        deleted_count = 0
+        space_freed = 0
+        
+        for item in os.listdir(uploads_dir):
+            item_path = os.path.join(uploads_dir, item)
+            
+            if os.path.isdir(item_path):
+                dir_created = datetime.fromtimestamp(os.path.getctime(item_path))
+                
+                if dir_created < cutoff_time:
+                    # Calculate directory size before deletion
+                    dir_size = sum(
+                        os.path.getsize(os.path.join(dirpath, filename))
+                        for dirpath, _, filenames in os.walk(item_path)
+                        for filename in filenames
+                    )
+                    
+                    try:
+                        shutil.rmtree(item_path)
+                        deleted_count += 1
+                        space_freed += dir_size
+                        logger.info(f"Deleted old upload: {item} (created {dir_created}, size {dir_size} bytes)")
+                    except Exception as e:
+                        logger.error(f"Failed to delete {item}: {str(e)}")
+        
+        space_freed_mb = round(space_freed / (1024 * 1024), 2)
+        
+        return {
+            "status": "success",
+            "message": f"Cleanup complete: Deleted {deleted_count} upload(s) older than {max_age_days} days",
+            "deleted_count": deleted_count,
+            "space_freed_mb": space_freed_mb,
+            "cutoff_date": cutoff_time.isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error during manual cleanup: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error during cleanup: {str(e)}")

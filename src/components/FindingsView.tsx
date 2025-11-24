@@ -55,18 +55,22 @@ function FindingsView({ scanId }: FindingsViewProps) {
     setLoading(true);
     try {
       let url = `${API_BASE}/api/findings`;
+
+      // Only filter by scan_id if one is selected
       if (scanId) {
         url += `?scan_id=${scanId}`;
       }
+
       if (filterSeverity !== 'all') {
         url += `${scanId ? '&' : '?'}severity=${filterSeverity}`;
       }
 
       const response = await fetch(url);
       const data = await response.json();
-      setFindings(data.findings);
+      setFindings(data.findings || []);
     } catch (error) {
       console.error('Error fetching findings:', error);
+      setFindings([]);
     } finally {
       setLoading(false);
     }

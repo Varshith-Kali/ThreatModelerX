@@ -32,15 +32,18 @@ function ThreatView({ scanId }: ThreatViewProps) {
     setLoading(true);
     try {
       let url = `${API_BASE}/api/threats`;
+
+      // Only filter by scan_id if one is selected
       if (scanId) {
         url += `?scan_id=${scanId}`;
       }
 
       const response = await fetch(url);
       const data = await response.json();
-      setThreats(data.threats);
+      setThreats(data.threats || []);
     } catch (error) {
       console.error('Error fetching threats:', error);
+      setThreats([]);
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PlayCircle, Loader2, Shield, Code, Terminal, FileCode, Upload, FolderOpen } from 'lucide-react';
 import ScanProgress from './ScanProgress';
 import ScanLogs from './ScanLogs';
@@ -7,9 +7,19 @@ interface ScanFormProps {
   onScanComplete: (scanId: string) => void;
 }
 
+interface DemoApp {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  path: string;
+  language: string;
+  vulnerabilities: string[];
+}
+
 function ScanForm({ onScanComplete }: ScanFormProps) {
   const [repoPath, setRepoPath] = useState('');
-  const [scanSource, setScanSource] = useState<'custom' | 'upload'>('upload');
+  const [scanSource, setScanSource] = useState<'custom' | 'upload' | 'demo'>('demo');
   const [uploading, setUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [scanTypes, setScanTypes] = useState(['sast', 'threat_model']);
@@ -17,6 +27,8 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
   const [scanId, setScanId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('');
   const [progress, setProgress] = useState<number>(0);
+  const [demoApps, setDemoApps] = useState<DemoApp[]>([]);
+  const [selectedDemoApp, setSelectedDemoApp] = useState<string | null>(null);
 
   const [showLogs, setShowLogs] = useState(false);
 
@@ -26,6 +38,37 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
     { value: 'sast', label: 'Static Analysis (SAST)', icon: <Code className="h-5 w-5 text-accent-DEFAULT" />, description: 'Semgrep, Bandit, Retire.js' },
     { value: 'threat_modeling', label: 'Threat Modeling', icon: <Shield className="h-5 w-5 text-accent-DEFAULT" />, description: 'STRIDE + MITRE ATT&CK mapping' },
   ];
+
+  // Fetch demo apps on component mount
+  useEffect(() => {
+    const fetchDemoApps = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/demo-apps`);
+        if (response.ok) {
+          const data = await response.json();
+          setDemoApps(data.demo_apps || []);
+          // Auto-select first demo app if available
+          if (data.demo_apps && data.demo_apps.length > 0) {
+            setSelectedDemoApp(data.demo_apps[0].id);
+            setRepoPath(data.demo_apps[0].path);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching demo apps:', error);
+      }
+    };
+    fetchDemoApps();
+  }, [API_BASE]);
+
+  const handleDemoAppSelect = (appId: string) => {
+    setSelectedDemoApp(appId);
+    const app = demoApps.find(a => a.id === appId);
+    if (app) {
+      setRepoPath(app.path);
+      setStatus(`Selected: ${app.name}`);
+    }
+  };
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -214,6 +257,19 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
             <div className="flex space-x-4 mb-6">
               <button
                 type="button"
+                onClick={() => setScanSource('demo')}
+                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${scanSource === 'demo'
+                  ? 'bg-accent-DEFAULT text-primary shadow-lg'
+                  : 'bg-primary-light border border-highlight text-text-primary hover:bg-secondary-light hover:border-accent-DEFAULT/50'
+                  }`}
+              >
+                <div className="flex items-center justify-center">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Demo Apps
+                </div>
+              </button>
+              <button
+                type="button"
                 onClick={() => setScanSource('upload')}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${scanSource === 'upload'
                   ? 'bg-accent-DEFAULT text-primary shadow-lg'
@@ -239,6 +295,62 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
                 </div>
               </button>
             </div>
+
+            {scanSource === 'demo' && (
+              <div className="animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {demoApps.map((app) => (
+                    <button
+                      key={app.id}
+                      type="button"
+                      onClick={() => handleDemoAppSelect(app.id)}
+                      disabled={scanning}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${selectedDemoApp === app.id
+                          ? 'border-accent-DEFAULT bg-accent-DEFAULT/10'
+                          : 'border-highlight bg-secondary hover:border-accent-DEFAULT/50 hover:bg-secondary-light'
+                        } ${scanning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <div className="flex items-start">
+                        <div className="text-4xl mr-3">{app.icon}</div>
+                        <div className="flex-1">
+                          <h3 className={`font-bold text-lg mb-1 ${selectedDemoApp === app.id ? 'text-accent-DEFAULT' : 'text-text-primary'
+                            }`}>
+                            {app.name}
+                          </h3>
+                          <p className="text-text-secondary text-sm mb-2">{app.description}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {app.vulnerabilities.slice(0, 2).map((vuln, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-0.5 bg-primary-light rounded text-xs text-accent-DEFAULT border border-accent-DEFAULT/20"
+                              >
+                                {vuln}
+                              </span>
+                            ))}
+                            {app.vulnerabilities.length > 2 && (
+                              <span className="px-2 py-0.5 bg-primary-light rounded text-xs text-text-muted">
+                                +{app.vulnerabilities.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xs text-text-muted font-mono truncate">
+                        {app.path}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {selectedDemoApp && (
+                  <div className="p-3 bg-primary-light/50 rounded-lg border border-highlight">
+                    <p className="text-sm text-text-secondary">
+                      <span className="font-bold text-accent-DEFAULT">Selected:</span>{' '}
+                      {demoApps.find(a => a.id === selectedDemoApp)?.name}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {scanSource === 'upload' && (
               <div className="animate-fade-in p-8 border-2 border-dashed border-highlight rounded-lg bg-secondary/50 text-center hover:border-accent-DEFAULT/50 transition-colors relative">

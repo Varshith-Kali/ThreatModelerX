@@ -6,28 +6,22 @@ import logging
 from typing import List, Dict, Any
 from pathlib import Path
 from ..models import Finding, SeverityLevel, FindingStatus
-
 class RetireRunner:
     def __init__(self):
         self.tool_name = "retire.js"
         self.logger = logging.getLogger("threatmodelx")
-
     def run(self, repo_path: str) -> List[Finding]:
         findings = []
-
         try:
-            # Check if retire is installed
             try:
                 subprocess.run(["retire", "--version"], capture_output=True, check=True)
             except (FileNotFoundError, subprocess.CalledProcessError):
                 self.logger.error("Retire.js is not installed or not found in PATH. Please install retire to use this scanner.")
                 self.logger.error("Install with: npm install -g retire")
                 return []
-                
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
-            env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
-
+            env["PYTHONUTF8"] = "1"
             self.logger.info(f"Running Retire.js scan on {repo_path}")
             result = subprocess.run(
                 ["retire", "--path", repo_path, "--outputformat", "json"],
@@ -37,10 +31,8 @@ class RetireRunner:
                 timeout=300,
                 env=env,
                 encoding='utf-8',
-                errors='replace'  # Replace unencodable characters
+                errors='replace'
             )
-
-            # Retire.js returns 13 when vulnerabilities are found, 0 when none found
             if result.returncode in [0, 13]:
                 try:
                     if result.stdout.strip():
@@ -56,31 +48,24 @@ class RetireRunner:
                 self.logger.error(f"Retire.js scan failed with exit code: {result.returncode}")
                 self.logger.error(f"Error output: {result.stderr}")
                 return []
-                
         except subprocess.TimeoutExpired:
             self.logger.error(f"Retire.js scan timed out for {repo_path}")
             return []
         except Exception as e:
             self.logger.error(f"Error running retire: {e}")
             return []
-
         return findings
-
     def _parse_results(self, data: List[Dict[str, Any]], repo_path: str) -> List[Finding]:
         findings = []
-
         for file_result in data:
             file_path = file_result.get("file", "unknown")
-
             for result in file_result.get("results", []):
                 for vulnerability in result.get("vulnerabilities", []):
                     severity = self._map_severity(vulnerability.get("severity", "low"))
-
                     identifiers = vulnerability.get("identifiers", {})
                     cwe = identifiers.get("CWE", [None])[0]
                     if cwe:
                         cwe = f"CWE-{cwe}"
-
                     finding = Finding(
                         id=f"RETIRE-{uuid.uuid4().hex[:8]}",
                         tool=self.tool_name,
@@ -95,9 +80,7 @@ class RetireRunner:
                         status=FindingStatus.OPEN
                     )
                     findings.append(finding)
-
         return findings
-
     def _map_severity(self, retire_severity: str) -> SeverityLevel:
         mapping = {
             "critical": SeverityLevel.CRITICAL,

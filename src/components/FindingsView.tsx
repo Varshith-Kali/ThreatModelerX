@@ -46,9 +46,26 @@ function FindingsView({ scanId }: FindingsViewProps) {
     fetchFindings();
   }, [scanId, filterSeverity]);
 
-  const downloadReport = () => {
+  const downloadReport = async () => {
     if (!scanId) return;
-    window.open(`${API_BASE}/api/report/${scanId}?format=html`, '_blank');
+    try {
+      const response = await fetch(`${API_BASE}/api/report/${scanId}?format=txt`);
+      if (!response.ok) {
+        console.error('Failed to download report');
+        return;
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `security_report_${scanId}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading report:', error);
+    }
   };
 
   const fetchFindings = async () => {

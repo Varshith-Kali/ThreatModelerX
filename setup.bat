@@ -7,8 +7,7 @@ python -m venv .venv
 call .venv\Scripts\activate.bat
 pip install -r requirements.txt
 
-REM Install additional tools needed for scanning
-pip install semgrep bandit
+REM Scanning tools are installed via requirements.txt
 
 cd ..
 echo Installing frontend dependencies...

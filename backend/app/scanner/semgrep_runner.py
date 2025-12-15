@@ -6,31 +6,24 @@ import logging
 from typing import List, Dict, Any
 from pathlib import Path
 from ..models import Finding, SeverityLevel, FindingStatus
-
 class SemgrepRunner:
     def __init__(self):
         self.tool_name = "semgrep"
         self.logger = logging.getLogger("threatmodelx")
-
     def run(self, repo_path: str) -> List[Finding]:
         findings = []
-
         try:
-            # Check if semgrep is installed
             try:
                 subprocess.run(["semgrep", "--version"], capture_output=True, check=True)
             except (FileNotFoundError, subprocess.CalledProcessError):
                 self.logger.error("Semgrep is not installed or not found in PATH. Please install semgrep to use this scanner.")
                 self.logger.error("Install with: pip install semgrep or visit https://semgrep.dev/docs/getting-started/")
                 return []
-                
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
-            env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
-            env["SEMGREP_ENABLE_VERSION_CHECK"] = "0"  # Disable version check
-
+            env["PYTHONUTF8"] = "1"
+            env["SEMGREP_ENABLE_VERSION_CHECK"] = "0"
             self.logger.info(f"Running ENHANCED Semgrep scan with multiple rulesets on {repo_path}")
-            # Use multiple powerful rulesets for comprehensive coverage
             result = subprocess.run(
                 [
                     "semgrep",
@@ -46,12 +39,11 @@ class SemgrepRunner:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=600,  # Increased timeout for comprehensive scan
+                timeout=600,
                 env=env,
                 encoding='utf-8',
-                errors='replace'  # Replace unencodable characters
+                errors='replace'
             )
-
             if result.returncode in [0, 1]:
                 try:
                     data = json.loads(result.stdout)
@@ -65,29 +57,23 @@ class SemgrepRunner:
                 self.logger.error(f"Semgrep scan failed with exit code: {result.returncode}")
                 self.logger.error(f"Error output: {result.stderr}")
                 return []
-                
         except subprocess.TimeoutExpired:
             self.logger.error(f"Semgrep scan timed out for {repo_path}")
             return []
         except Exception as e:
             self.logger.error(f"Error running semgrep: {e}")
             return []
-
         return findings
-
     def _parse_results(self, data: Dict[str, Any], repo_path: str) -> List[Finding]:
         findings = []
-
         for result in data.get("results", []):
             severity = self._map_severity(result.get("extra", {}).get("severity", "INFO"))
-
             cwe = None
             metadata = result.get("extra", {}).get("metadata", {})
             if "cwe" in metadata:
                 cwe_list = metadata["cwe"]
                 if isinstance(cwe_list, list) and len(cwe_list) > 0:
                     cwe = f"CWE-{cwe_list[0]}"
-
             finding = Finding(
                 id=f"SEMGREP-{uuid.uuid4().hex[:8]}",
                 tool=self.tool_name,
@@ -102,9 +88,7 @@ class SemgrepRunner:
                 status=FindingStatus.OPEN
             )
             findings.append(finding)
-
         return findings
-
     def _map_severity(self, semgrep_severity: str) -> SeverityLevel:
         mapping = {
             "ERROR": SeverityLevel.HIGH,

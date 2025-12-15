@@ -1,5 +1,4 @@
 from ..models import Finding, RemediationPlan, SeverityLevel
-
 class RemediationPlanner:
     REMEDIATION_TEMPLATES = {
         "CWE-89": {
@@ -10,14 +9,6 @@ class RemediationPlanner:
                 "Validate and sanitize user inputs",
                 "Test with sqlmap or similar tools to verify fix"
             ],
-            "code_snippet": """
-# Bad - SQL injection vulnerable
-query = f"SELECT * FROM users WHERE id = {user_id}"
-
-# Good - Parameterized query
-query = "SELECT * FROM users WHERE id = ?"
-cursor.execute(query, (user_id,))
-""",
             "resources": [
                 "https://owasp.org/www-community/attacks/SQL_Injection",
                 "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
@@ -31,13 +22,6 @@ cursor.execute(query, (user_id,))
                 "Use language-specific libraries instead of shell commands where possible",
                 "Test with command injection payloads"
             ],
-            "code_snippet": """
-# Bad - Command injection vulnerable
-os.system(f"ls {user_input}")
-
-# Good - Safe subprocess usage
-subprocess.run(["ls", user_input], check=True)
-""",
             "resources": [
                 "https://owasp.org/www-community/attacks/Command_Injection",
                 "https://docs.python.org/3/library/subprocess.html#security-considerations"
@@ -51,13 +35,6 @@ subprocess.run(["ls", user_input], check=True)
                 "Validate and sanitize inputs on server side",
                 "Use DOMPurify for client-side sanitization if needed"
             ],
-            "code_snippet": """
-# Bad - XSS vulnerable
-html = f"<div>{user_input}</div>"
-
-# Good - Use template engine with autoescape
-template.render(user_input=user_input)
-""",
             "resources": [
                 "https://owasp.org/www-community/attacks/xss/",
                 "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
@@ -71,14 +48,6 @@ template.render(user_input=user_input)
                 "Rotate compromised credentials immediately",
                 "Add .env to .gitignore and scan history for leaked secrets"
             ],
-            "code_snippet": """
-# Bad - Hardcoded credentials
-password = "admin123"
-
-# Good - Use environment variables
-import os
-password = os.getenv("DB_PASSWORD")
-""",
             "resources": [
                 "https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_password",
                 "https://www.gitguardian.com/blog-secrets-in-code"
@@ -92,31 +61,20 @@ password = os.getenv("DB_PASSWORD")
                 "Implement input validation before deserialization",
                 "Consider using safer formats like JSON or Protocol Buffers"
             ],
-            "code_snippet": """
-# Bad - Insecure deserialization
-obj = pickle.loads(user_data)
-
-# Good - Use JSON
-import json
-obj = json.loads(user_data)
-""",
             "resources": [
                 "https://owasp.org/www-community/vulnerabilities/Deserialization_of_untrusted_data",
                 "https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html"
             ]
         }
     }
-
     def create_plan(self, finding: Finding) -> RemediationPlan:
         priority = self._calculate_priority(finding)
         effort = self._estimate_effort(finding)
-
         template = self.REMEDIATION_TEMPLATES.get(finding.cwe, {
             "steps": ["Review the security issue", "Apply appropriate fixes", "Test the changes"],
             "code_snippet": None,
             "resources": ["https://cwe.mitre.org/"]
         })
-
         plan = RemediationPlan(
             finding_id=finding.id,
             priority=priority,
@@ -125,9 +83,7 @@ obj = json.loads(user_data)
             code_snippet=template.get("code_snippet"),
             resources=template.get("resources", [])
         )
-
         return plan
-
     def _calculate_priority(self, finding: Finding) -> int:
         if finding.severity == SeverityLevel.CRITICAL:
             return 1
@@ -137,7 +93,6 @@ obj = json.loads(user_data)
             return 4
         else:
             return 5
-
     def _estimate_effort(self, finding: Finding) -> str:
         effort_map = {
             "CWE-798": "1-2 hours",
@@ -149,5 +104,4 @@ obj = json.loads(user_data)
             "CWE-942": "1 hour",
             "CWE-338": "1-2 hours"
         }
-
         return effort_map.get(finding.cwe, "2-4 hours")

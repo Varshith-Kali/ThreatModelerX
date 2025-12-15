@@ -2,19 +2,16 @@ from pydantic import BaseModel, Field, HttpUrl
 from typing import List, Optional, Dict, Any, Union
 from enum import Enum
 from datetime import datetime
-
 class SeverityLevel(str, Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
     CRITICAL = "CRITICAL"
-
 class FindingStatus(str, Enum):
     OPEN = "OPEN"
     IN_PROGRESS = "IN_PROGRESS"
     FIXED = "FIXED"
     FALSE_POSITIVE = "FALSE_POSITIVE"
-
 class Finding(BaseModel):
     id: str
     tool: str
@@ -33,7 +30,6 @@ class Finding(BaseModel):
     reviewer_comments: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
-
 class ThreatCategory(str, Enum):
     SPOOFING = "SPOOFING"
     TAMPERING = "TAMPERING"
@@ -41,7 +37,6 @@ class ThreatCategory(str, Enum):
     INFORMATION_DISCLOSURE = "INFORMATION_DISCLOSURE"
     DENIAL_OF_SERVICE = "DENIAL_OF_SERVICE"
     ELEVATION_OF_PRIVILEGE = "ELEVATION_OF_PRIVILEGE"
-
 class Threat(BaseModel):
     id: str
     category: ThreatCategory
@@ -56,7 +51,6 @@ class Threat(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
     mitigation: str
-
 class ScanRequest(BaseModel):
     repo_path: str
     scan_types: List[str] = ["sast", "dast", "threat_model"]
@@ -66,7 +60,6 @@ class ScanRequest(BaseModel):
     notification_email: Optional[str] = None
     export_format: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
-
 class ScanResult(BaseModel):
     scan_id: str
     repo_path: str
@@ -75,7 +68,6 @@ class ScanResult(BaseModel):
     threats: List[Threat]
     summary: Dict[str, Any]
     risk_score: float
-
 class RemediationPlan(BaseModel):
     finding_id: str
     priority: int

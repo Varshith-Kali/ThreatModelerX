@@ -3,7 +3,6 @@ import re
 from typing import List, Dict, Any, Set
 from pathlib import Path
 from ..models import Threat, ThreatCategory, SeverityLevel, Finding
-
 STRIDE_RULES = [
     {
         "pattern": r"eval\(|exec\(",
@@ -106,61 +105,46 @@ STRIDE_RULES = [
         "mitigation": "Implement proper access controls and role-based authorization."
     }
 ]
-
 import logging
-
 class StrideMapper:
     def __init__(self):
         self.logger = logging.getLogger("autothreatmap")
         self.rules = STRIDE_RULES
-
     def analyze_code(self, repo_path: str, findings: List[Finding]) -> List[Threat]:
         threats = []
         components = self._identify_components(repo_path)
-
         for component, files in components.items():
             component_threats = self._analyze_component(component, files, findings)
             threats.extend(component_threats)
-
         return threats
-
     def _identify_components(self, repo_path: str) -> Dict[str, List[str]]:
         components = {}
         repo = Path(repo_path)
-
         for file in repo.rglob("*"):
             if file.is_file() and file.suffix in [".py", ".js", ".java", ".ts", ".tsx"]:
                 component_name = self._get_component_name(file, repo)
                 if component_name not in components:
                     components[component_name] = []
                 components[component_name].append(str(file))
-
         return components
-
     def _get_component_name(self, file: Path, repo: Path) -> str:
         rel_path = file.relative_to(repo)
         parts = rel_path.parts
-
         if len(parts) > 1:
             return parts[0]
         return "root"
-
     def _analyze_component(self, component: str, files: List[str], findings: List[Finding]) -> List[Threat]:
         threats = []
         detected_patterns: Set[str] = set()
-
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
-
                 for rule in self.rules:
                     if re.search(rule["pattern"], content, re.IGNORECASE | re.MULTILINE):
                         pattern_key = f"{component}-{rule['cwe']}"
-
                         if pattern_key not in detected_patterns:
                             detected_patterns.add(pattern_key)
-
                             for threat_category in rule["threats"]:
                                 threat = Threat(
                                     id=f"THREAT-{uuid.uuid4().hex[:8]}",
@@ -177,7 +161,6 @@ class StrideMapper:
                                 break
             except Exception as e:
                 self.logger.error(f"Error analyzing file {file_path}: {e}")
-
         component_findings = [f for f in findings if component in f.file]
         for finding in component_findings:
             if finding.cwe and finding.severity in [SeverityLevel.HIGH, SeverityLevel.CRITICAL]:
@@ -193,18 +176,13 @@ class StrideMapper:
                     mitigation=finding.fix_suggestion or "Review and remediate the security issue"
                 )
                 threats.append(threat)
-
         return threats
-
     def generate_attack_graph(self, threats: List[Threat]) -> Dict[str, Any]:
         import networkx as nx
-
         G = nx.DiGraph()
-
         components = set(t.component for t in threats)
         for comp in components:
             G.add_node(comp, node_type="component")
-
         for threat in threats:
             threat_node = f"{threat.id}"
             G.add_node(
@@ -215,7 +193,6 @@ class StrideMapper:
                 description=threat.description
             )
             G.add_edge(threat_node, threat.component, relationship="threatens")
-
         return {
             "nodes": [{"id": n, "data": G.nodes[n]} for n in G.nodes()],
             "edges": [{"source": u, "target": v, "data": G.edges[u, v]} for u, v in G.edges()],

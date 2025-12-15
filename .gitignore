@@ -48,12 +48,13 @@ backend/app/uploads/*
 backend/reports/*
 !backend/reports/.gitkeep
 
-# Test files
-test_*.py
-*_test.py
-quick_test.py
-scan_demo_apps.py
-debug_*.py
+
+# Audit and documentation (keep only README.md)
+MOCK_DATA_REMOVAL_REPORT.md
+PRODUCTION_READINESS_AUDIT.md
+PROJECT_AUDIT_REPORT.md
+QUICK_REFERENCE.md
+VULNERABILITY_THREAT_MAPPING_VERIFICATION.md
 
 # Build artifacts
 build/

@@ -16,22 +16,37 @@ class SemgrepRunner:
         findings = []
 
         try:
+            # Check if semgrep is installed
             try:
-                subprocess.run(["semgrep", "--version"], capture_output=True, check=False)
-            except FileNotFoundError:
-                self.logger.warning("Semgrep not found. Using mock data for demonstration.")
-                return self._generate_mock_findings(repo_path)
+                subprocess.run(["semgrep", "--version"], capture_output=True, check=True)
+            except (FileNotFoundError, subprocess.CalledProcessError):
+                self.logger.error("Semgrep is not installed or not found in PATH. Please install semgrep to use this scanner.")
+                self.logger.error("Install with: pip install semgrep or visit https://semgrep.dev/docs/getting-started/")
+                return []
                 
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
             env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
+            env["SEMGREP_ENABLE_VERSION_CHECK"] = "0"  # Disable version check
 
+            self.logger.info(f"Running ENHANCED Semgrep scan with multiple rulesets on {repo_path}")
+            # Use multiple powerful rulesets for comprehensive coverage
             result = subprocess.run(
-                ["semgrep", "--config=auto", "--json", "--quiet", "--recursive", repo_path],
+                [
+                    "semgrep",
+                    "--config=auto",
+                    "--config=p/security-audit",
+                    "--config=p/owasp-top-ten",
+                    "--config=p/cwe-top-25",
+                    "--json",
+                    "--quiet",
+                    "--no-git-ignore",
+                    repo_path
+                ],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
                 text=True,
-                timeout=300,
+                timeout=600,  # Increased timeout for comprehensive scan
                 env=env,
                 encoding='utf-8',
                 errors='replace'  # Replace unencodable characters
@@ -41,52 +56,23 @@ class SemgrepRunner:
                 try:
                     data = json.loads(result.stdout)
                     findings = self._parse_results(data, repo_path)
-                    self.logger.info(f"Semgrep found {len(findings)} issues in {repo_path}")
+                    self.logger.info(f"Semgrep ENHANCED scan found {len(findings)} issues in {repo_path}")
+                    self.logger.info(f"Rulesets used: auto, security-audit, owasp-top-ten, cwe-top-25")
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to parse Semgrep JSON output: {e}")
-                    return self._generate_mock_findings(repo_path)
+                    return []
             else:
-                self.logger.warning(f"Semgrep returned non-standard exit code: {result.returncode}")
-                return self._generate_mock_findings(repo_path)
+                self.logger.error(f"Semgrep scan failed with exit code: {result.returncode}")
+                self.logger.error(f"Error output: {result.stderr}")
+                return []
                 
         except subprocess.TimeoutExpired:
-            self.logger.warning(f"Semgrep scan timed out for {repo_path}")
+            self.logger.error(f"Semgrep scan timed out for {repo_path}")
+            return []
         except Exception as e:
             self.logger.error(f"Error running semgrep: {e}")
-            return self._generate_mock_findings(repo_path)
+            return []
 
-        return findings
-        
-    def _generate_mock_findings(self, repo_path: str) -> List[Finding]:
-        """Generate mock findings for demonstration when semgrep is not available"""
-        self.logger.info("Generating mock semgrep findings for demonstration")
-        findings = []
-        
-        # Create a few sample findings
-        findings.append(Finding(
-            id=f"SEMGREP-MOCK-1",
-            tool=self.tool_name,
-            file=str(Path(repo_path) / "app.js"),
-            line=42,
-            description="Potential XSS vulnerability in user input handling",
-            severity=SeverityLevel.HIGH,
-            status=FindingStatus.OPEN,
-            cwe="CWE-79",
-            fix_suggestion="Sanitize user input before rendering to prevent XSS attacks"
-        ))
-        
-        findings.append(Finding(
-            id=f"SEMGREP-MOCK-2",
-            tool=self.tool_name,
-            file=str(Path(repo_path) / "routes/users.js"),
-            line=23,
-            description="SQL Injection vulnerability in query construction",
-            severity=SeverityLevel.CRITICAL,
-            status=FindingStatus.OPEN,
-            cwe="CWE-89",
-            fix_suggestion="Use parameterized queries or an ORM to prevent SQL injection"
-        ))
-        
         return findings
 
     def _parse_results(self, data: Dict[str, Any], repo_path: str) -> List[Finding]:

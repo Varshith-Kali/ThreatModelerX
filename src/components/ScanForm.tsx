@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PlayCircle, Loader2, Shield, Code, Terminal, FileCode, Server, Coffee, Zap, Upload, FolderOpen } from 'lucide-react';
+import { PlayCircle, Loader2, Shield, Code, Terminal, FileCode, Upload, FolderOpen } from 'lucide-react';
 import ScanProgress from './ScanProgress';
 import ScanLogs from './ScanLogs';
 
@@ -8,8 +8,8 @@ interface ScanFormProps {
 }
 
 function ScanForm({ onScanComplete }: ScanFormProps) {
-  const [repoPath, setRepoPath] = useState('./demo-apps/python-flask');
-  const [scanSource, setScanSource] = useState<'demo' | 'custom' | 'upload'>('demo');
+  const [repoPath, setRepoPath] = useState('');
+  const [scanSource, setScanSource] = useState<'custom' | 'upload'>('upload');
   const [uploading, setUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [scanTypes, setScanTypes] = useState(['sast', 'threat_model']);
@@ -21,13 +21,6 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
   const [showLogs, setShowLogs] = useState(false);
 
   const API_BASE = 'http://localhost:8000';
-
-  const demoApps = [
-    { value: './demo-apps/python-flask', label: 'Python Flask', icon: <Coffee className="h-5 w-5 text-yellow-400" />, description: 'Vulnerable Python web application' },
-    { value: './demo-apps/node-express', label: 'Node.js Express', icon: <Server className="h-5 w-5 text-green-400" />, description: 'Vulnerable Node.js API service' },
-    { value: './demo-apps/java-spring', label: 'Java Spring', icon: <Coffee className="h-5 w-5 text-red-400" />, description: 'Vulnerable Java enterprise app' },
-    { value: './demo-apps/go-gin', label: 'Go Gin', icon: <Zap className="h-5 w-5 text-blue-400" />, description: 'Vulnerable Go microservice' },
-  ];
 
   const availableScanTypes = [
     { value: 'sast', label: 'Static Analysis (SAST)', icon: <Code className="h-5 w-5 text-accent-DEFAULT" />, description: 'Semgrep, Bandit, Retire.js' },
@@ -221,19 +214,6 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
             <div className="flex space-x-4 mb-6">
               <button
                 type="button"
-                onClick={() => setScanSource('demo')}
-                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${scanSource === 'demo'
-                  ? 'bg-accent-DEFAULT text-primary shadow-lg'
-                  : 'bg-primary-light border border-highlight text-text-primary hover:bg-secondary-light hover:border-accent-DEFAULT/50'
-                  }`}
-              >
-                <div className="flex items-center justify-center">
-                  <Coffee className="w-4 h-4 mr-2" />
-                  Demo Apps
-                </div>
-              </button>
-              <button
-                type="button"
                 onClick={() => setScanSource('upload')}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${scanSource === 'upload'
                   ? 'bg-accent-DEFAULT text-primary shadow-lg'
@@ -259,31 +239,6 @@ function ScanForm({ onScanComplete }: ScanFormProps) {
                 </div>
               </button>
             </div>
-
-            {scanSource === 'demo' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-                {demoApps.map((app) => (
-                  <div
-                    key={app.value}
-                    onClick={() => !scanning && setRepoPath(app.value)}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all duration-300 ${repoPath === app.value
-                      ? 'bg-accent-DEFAULT/10 border-accent-DEFAULT ring-1 ring-accent-DEFAULT'
-                      : 'bg-secondary border-highlight hover:border-accent-DEFAULT/50 hover:bg-secondary-light'
-                      } ${scanning ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex items-center mb-2">
-                      <div className={`p-2 rounded-full mr-3 ${repoPath === app.value ? 'bg-accent-DEFAULT text-primary' : 'bg-primary-light'}`}>
-                        {app.icon}
-                      </div>
-                      <span className={`font-bold ${repoPath === app.value ? 'text-accent-DEFAULT' : 'text-text-primary'}`}>
-                        {app.label}
-                      </span>
-                    </div>
-                    <p className="text-sm text-text-secondary ml-12">{app.description}</p>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {scanSource === 'upload' && (
               <div className="animate-fade-in p-8 border-2 border-dashed border-highlight rounded-lg bg-secondary/50 text-center hover:border-accent-DEFAULT/50 transition-colors relative">

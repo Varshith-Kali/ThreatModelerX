@@ -16,20 +16,23 @@ class RetireRunner:
         findings = []
 
         try:
+            # Check if retire is installed
             try:
-                subprocess.run(["retire", "--version"], capture_output=True, check=False)
-            except FileNotFoundError:
-                self.logger.warning("Retire.js not found. Using mock data for demonstration.")
-                return self._generate_mock_findings(repo_path)
+                subprocess.run(["retire", "--version"], capture_output=True, check=True)
+            except (FileNotFoundError, subprocess.CalledProcessError):
+                self.logger.error("Retire.js is not installed or not found in PATH. Please install retire to use this scanner.")
+                self.logger.error("Install with: npm install -g retire")
+                return []
                 
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
             env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
 
+            self.logger.info(f"Running Retire.js scan on {repo_path}")
             result = subprocess.run(
                 ["retire", "--path", repo_path, "--outputformat", "json"],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
                 text=True,
                 timeout=300,
                 env=env,
@@ -37,6 +40,7 @@ class RetireRunner:
                 errors='replace'  # Replace unencodable characters
             )
 
+            # Retire.js returns 13 when vulnerabilities are found, 0 when none found
             if result.returncode in [0, 13]:
                 try:
                     if result.stdout.strip():
@@ -47,49 +51,19 @@ class RetireRunner:
                         self.logger.info(f"Retire.js found no issues in {repo_path}")
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to parse Retire.js JSON output: {e}")
-                    return self._generate_mock_findings(repo_path)
+                    return []
             else:
-                self.logger.warning(f"Retire.js returned non-standard exit code: {result.returncode}")
-                return self._generate_mock_findings(repo_path)
+                self.logger.error(f"Retire.js scan failed with exit code: {result.returncode}")
+                self.logger.error(f"Error output: {result.stderr}")
+                return []
                 
         except subprocess.TimeoutExpired:
-            self.logger.warning(f"Retire.js scan timed out for {repo_path}")
+            self.logger.error(f"Retire.js scan timed out for {repo_path}")
+            return []
         except Exception as e:
             self.logger.error(f"Error running retire: {e}")
-            return self._generate_mock_findings(repo_path)
+            return []
 
-        return findings
-        
-    def _generate_mock_findings(self, repo_path: str) -> List[Finding]:
-        """Generate mock findings for demonstration when retire.js is not available"""
-        self.logger.info("Generating mock retire.js findings for demonstration")
-        findings = []
-        
-        # Create a few sample findings
-        findings.append(Finding(
-            id=f"RETIRE-MOCK-1",
-            tool=self.tool_name,
-            file=str(Path(repo_path) / "node_modules/jquery/dist/jquery.js"),
-            line=1,
-            description="jQuery 1.8.1 vulnerable to XSS attacks",
-            severity=SeverityLevel.HIGH,
-            status=FindingStatus.OPEN,
-            cwe="CWE-79",
-            fix_suggestion="Update jQuery to version 3.5.0 or later"
-        ))
-        
-        findings.append(Finding(
-            id=f"RETIRE-MOCK-2",
-            tool=self.tool_name,
-            file=str(Path(repo_path) / "node_modules/lodash/lodash.js"),
-            line=1,
-            description="Prototype pollution in lodash before 4.17.12",
-            severity=SeverityLevel.MEDIUM,
-            status=FindingStatus.OPEN,
-            cwe="CWE-1321",
-            fix_suggestion="Update lodash to version 4.17.12 or later"
-        ))
-        
         return findings
 
     def _parse_results(self, data: List[Dict[str, Any]], repo_path: str) -> List[Finding]:

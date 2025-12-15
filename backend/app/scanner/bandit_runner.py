@@ -16,18 +16,21 @@ class BanditRunner:
         findings = []
 
         try:
+            # Check if bandit is installed
             try:
-                subprocess.run(["bandit", "--version"], capture_output=True, check=False)
-            except FileNotFoundError:
-                self.logger.warning("Bandit not found. Using mock data for demonstration.")
-                return self._generate_mock_findings(repo_path)
+                subprocess.run(["bandit", "--version"], capture_output=True, check=True)
+            except (FileNotFoundError, subprocess.CalledProcessError):
+                self.logger.error("Bandit is not installed or not found in PATH. Please install bandit to use this scanner.")
+                self.logger.error("Install with: pip install bandit")
+                return []
                 
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
             env["PYTHONUTF8"] = "1"  # Force UTF-8 mode in Python 3.7+
 
+            self.logger.info(f"Running Bandit scan on {repo_path}")
             result = subprocess.run(
-                ["bandit", "-r", repo_path, "-f", "json", "--recursive"], # Explicit recursive flag although -r does it
+                ["bandit", "-r", repo_path, "-f", "json", "--recursive"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -44,50 +47,19 @@ class BanditRunner:
                     self.logger.info(f"Bandit found {len(findings)} issues in {repo_path}")
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to parse Bandit JSON output: {e}")
-                    return self._generate_mock_findings(repo_path)
+                    return []
             else:
-                self.logger.warning(f"Bandit returned non-standard exit code: {result.returncode}")
-                return self._generate_mock_findings(repo_path)
+                self.logger.error(f"Bandit scan failed with exit code: {result.returncode}")
+                self.logger.error(f"Error output: {result.stderr}")
+                return []
                 
         except subprocess.TimeoutExpired:
-            self.logger.warning(f"Bandit scan timed out for {repo_path}")
-            return self._generate_mock_findings(repo_path)
+            self.logger.error(f"Bandit scan timed out for {repo_path}")
+            return []
         except Exception as e:
             self.logger.error(f"Error running bandit: {e}")
-            return self._generate_mock_findings(repo_path)
+            return []
 
-        return findings
-        
-    def _generate_mock_findings(self, repo_path: str) -> List[Finding]:
-        """Generate mock findings for demonstration when bandit is not available"""
-        self.logger.info("Generating mock bandit findings for demonstration")
-        findings = []
-        
-        # Create a few sample findings
-        findings.append(Finding(
-            id=f"BANDIT-MOCK-1",
-            tool=self.tool_name,
-            file=str(Path(repo_path) / "app.py"),
-            line=15,
-            description="Use of insecure MD5 hash function",
-            severity=SeverityLevel.MEDIUM,
-            status=FindingStatus.OPEN,
-            cwe="CWE-327",
-            fix_suggestion="Use a more secure hashing algorithm like SHA-256"
-        ))
-        
-        findings.append(Finding(
-            id=f"BANDIT-MOCK-2",
-            tool=self.tool_name,
-            file=str(Path(repo_path) / "utils/helpers.py"),
-            line=42,
-            description="Possible hardcoded password",
-            severity=SeverityLevel.HIGH,
-            status=FindingStatus.OPEN,
-            cwe="CWE-798",
-            fix_suggestion="Store passwords in environment variables or a secure vault"
-        ))
-        
         return findings
 
     def _parse_results(self, data: Dict[str, Any], repo_path: str) -> List[Finding]:

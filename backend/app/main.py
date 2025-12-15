@@ -391,28 +391,24 @@ async def create_scan(request: ScanRequest, background_tasks: BackgroundTasks):
     
     logger.info(f"Received scan request: {request.dict()}")
     
-    project_root = os.path.abspath(os.path.join(os.getcwd(), ".."))
+    # Use the provided path directly - no fallbacks to demo apps
+    repo_path = request.repo_path
     
+    # Validate that the path exists
+    if not repo_path or not os.path.exists(repo_path):
+        logger.error(f"Invalid or non-existent path provided: {repo_path}")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Repository path not found or invalid: {repo_path}. Please provide a valid path to scan."
+        )
     
-    # Check if the provided path exists (for uploaded files or absolute paths)
-    if os.path.exists(request.repo_path):
-        repo_path = request.repo_path
-        logger.info(f"Using provided path: {repo_path}")
-    elif "python-flask" in request.repo_path:
-        repo_path = os.path.join(project_root, "demo-apps", "python-flask")
-    elif "node-express" in request.repo_path:
-        repo_path = os.path.join(project_root, "demo-apps", "node-express")
-    else:
-        # Only default to python-flask if it's one of the known demo paths or empty
-        if "demo-apps" in request.repo_path or not request.repo_path:
-             repo_path = os.path.join(project_root, "demo-apps", "python-flask")
-        else:
-             # If a custom path was provided but doesn't exist, we'll fail later
-             repo_path = request.repo_path
-    
-    if not os.path.exists(repo_path):
-        logger.error(f"Path does not exist: {repo_path}")
-        raise HTTPException(status_code=400, detail=f"Repository path not found: {repo_path}")
+    # Ensure it's a directory
+    if not os.path.isdir(repo_path):
+        logger.error(f"Path is not a directory: {repo_path}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Path must be a directory: {repo_path}"
+        )
 
     scan_results_store[scan_id] = {
         "status": "running",
@@ -437,20 +433,24 @@ async def auto_scan(request: ScanRequest):
     
     logger.info(f"Received auto scan request: {request.dict()}")
     
-    project_root = os.path.abspath(os.path.join(os.getcwd(), ".."))
+    # Use the provided path directly - no fallbacks to demo apps
+    repo_path = request.repo_path
     
-    if "python-flask" in request.repo_path:
-        repo_path = os.path.join(project_root, "demo-apps", "python-flask")
-    elif "node-express" in request.repo_path:
-        repo_path = os.path.join(project_root, "demo-apps", "node-express")
-    else:
-        repo_path = os.path.join(project_root, "demo-apps", "python-flask")
-        
-    logger.info(f"Using hardcoded demo path for auto scan: {repo_path}")
+    # Validate that the path exists
+    if not repo_path or not os.path.exists(repo_path):
+        logger.error(f"Invalid or non-existent path provided: {repo_path}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Repository path not found or invalid: {repo_path}. Please provide a valid path to scan."
+        )
     
-    if not os.path.exists(repo_path):
-        logger.error(f"Path does not exist: {repo_path}")
-        raise HTTPException(status_code=400, detail=f"Repository path not found: {repo_path}")
+    # Ensure it's a directory
+    if not os.path.isdir(repo_path):
+        logger.error(f"Path is not a directory: {repo_path}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Path must be a directory: {repo_path}"
+        )
 
     scan_results_store[scan_id] = {
         "status": "running",

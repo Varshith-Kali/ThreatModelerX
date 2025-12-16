@@ -56,6 +56,9 @@ PROJECT_AUDIT_REPORT.md
 QUICK_REFERENCE.md
 VULNERABILITY_THREAT_MAPPING_VERIFICATION.md
 
+# Agent/AI development files
+.agent/
+
 # Build artifacts
 build/
 *.egg-info/

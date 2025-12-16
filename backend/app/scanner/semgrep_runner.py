@@ -16,8 +16,8 @@ class SemgrepRunner:
             try:
                 subprocess.run(["semgrep", "--version"], capture_output=True, check=True)
             except (FileNotFoundError, subprocess.CalledProcessError):
-                self.logger.error("Semgrep is not installed or not found in PATH. Please install semgrep to use this scanner.")
-                self.logger.error("Install with: pip install semgrep or visit https://semgrep.dev/docs/getting-started/")
+                self.logger.error("Semgrep is not installed or not found in PATH.")
+                self.logger.error("Install with: pip install semgrep")
                 return []
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
